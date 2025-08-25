@@ -3,17 +3,25 @@ DECLARE q1,q2,q3,q4,q5,q6,q7,q8,q9 , columns_list,update_cols, load_query,merge_
 DECLARE update_cols STRING;
 
 
-- Put them into an array
-DECLARE queries ARRAY<STRING>;
-SET queries = [load_query, merge_insert, merge_update, merge_sdelete, merge_xdelete, merge_mdelete, d_delete];
+DECLARE queries ARRAY<STRUCT<name STRING, sql STRING>>;
+SET queries = [
+  STRUCT("load_query"     AS name, load_query     AS sql),
+  STRUCT("merge_insert"   AS name, merge_insert   AS sql),
+  STRUCT("merge_update"   AS name, merge_update   AS sql),
+  STRUCT("merge_sdelete"  AS name, merge_sdelete  AS sql),
+  STRUCT("merge_xdelete"  AS name, merge_xdelete  AS sql),
+  STRUCT("merge_mdelete"  AS name, merge_mdelete  AS sql),
+  STRUCT("d_delete"       AS name, d_delete       AS sql)
+];
 
--- Loop over each query and execute
+-- Loop
 FOR q IN UNNEST(queries) DO
-  EXECUTE IMMEDIATE q;
+  -- Print the query name
+  RAISE USING MESSAGE = CONCAT("Executing query: ", q.name);
+
+  -- Run the query
+  EXECUTE IMMEDIATE q.sql;
 END FOR;
-
-
-DECLARE  STRING;
 
 -- Generate comma-separated column list from the source table
 SET columns_list = (
