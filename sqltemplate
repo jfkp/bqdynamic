@@ -254,3 +254,14 @@ SET q9 = '''
              CASE WHEN lochierarchy = 0 THEN i_category END,
              rank_within_parent
 ''';
+
+
+SET merge_insert = '''
+    MERGE INTO store_sale_denorm_bench_''' || SCALE || ''' AS a
+    USING store_sales_denorm_insert_medium_''' || SCALE || ''' AS b
+    ON a.ss_sold_date_sk = b.ss_sold_date_sk
+       AND a.ss_item_sk = b.ss_item_sk
+       AND a.ss_ticket_number = b.ss_ticket_number
+    WHEN NOT MATCHED THEN
+      INSERT ROW
+''';
