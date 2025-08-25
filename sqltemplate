@@ -465,3 +465,36 @@ SET merge_update = '''
         a.i_manager_id = b.i_manager_id,
         a.i_product_name = b.i_product_name
 ''';
+-- to be integrated
+
+SET merge_xdelete = '''
+MERGE INTO store_sale_denorm_bench_''' || SCALE || ''' AS a
+USING store_sales_denorm_delete_xsmall_''' || SCALE || ''' AS b
+ON a.ss_sold_date_sk = b.ss_sold_date_sk
+   AND a.ss_item_sk = b.ss_item_sk
+   AND a.ss_ticket_number = b.ss_ticket_number
+WHEN MATCHED THEN DELETE
+''';
+
+SET merge_sdelete = '''
+MERGE INTO store_sale_denorm_bench_''' || SCALE || ''' AS a
+USING store_sales_denorm_delete_small_''' || SCALE || ''' AS b
+ON a.ss_sold_date_sk = b.ss_sold_date_sk
+   AND a.ss_item_sk = b.ss_item_sk
+   AND a.ss_ticket_number = b.ss_ticket_number
+WHEN MATCHED THEN DELETE
+''';
+
+SET merge_mdelete = '''
+MERGE INTO store_sale_denorm_bench_''' || SCALE || ''' AS a
+USING store_sales_denorm_delete_medium_''' || SCALE || ''' AS b
+ON a.ss_sold_date_sk = b.ss_sold_date_sk
+   AND a.ss_item_sk = b.ss_item_sk
+   AND a.ss_ticket_number = b.ss_ticket_number
+WHEN MATCHED THEN DELETE
+''';
+
+SET d_delete = '''
+DELETE FROM store_sale_denorm_bench_''' || SCALE || '''
+WHERE c_customer_sk = 221580
+''';
