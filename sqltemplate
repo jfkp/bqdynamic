@@ -2,6 +2,17 @@ DECLARE SCALE STRING DEFAULT '10G';
 DECLARE q1,q2,q3,q4,q5,q6,q7,q8,q9 , columns_list,update_cols, load_query,merge_insert,merge_update,merge_sdelete,merge_xdelete,merge_mdelete,d_delete STRING;
 DECLARE update_cols STRING;
 
+
+- Put them into an array
+DECLARE queries ARRAY<STRING>;
+SET queries = [load_query, merge_insert, merge_update, merge_sdelete, merge_xdelete, merge_mdelete, d_delete];
+
+-- Loop over each query and execute
+FOR q IN UNNEST(queries) DO
+  EXECUTE IMMEDIATE q;
+END FOR;
+
+
 DECLARE  STRING;
 
 -- Generate comma-separated column list from the source table
