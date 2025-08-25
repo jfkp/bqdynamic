@@ -16,3 +16,21 @@ SET q2 = '''
     HAVING COUNT(*) >= 10
     ORDER BY cnt, s.ca_state
 ''';
+
+
+SET q3 = '''
+    SELECT i_item_id,
+           AVG(ss_quantity)    AS agg1,
+           AVG(ss_list_price)  AS agg2,
+           AVG(ss_coupon_amt)  AS agg3,
+           AVG(ss_sales_price) AS agg4
+    FROM store_sale_denorm_bench_''' || SCALE || '''
+    WHERE cd_gender = 'F'
+      AND cd_marital_status = 'W'
+      AND cd_education_status = 'Primary'
+      AND (p_channel_email = 'N'
+           OR p_channel_event = 'N')
+      AND d_year = 1998
+    GROUP BY i_item_id
+    ORDER BY i_item_id
+''';
