@@ -18,6 +18,17 @@ SET update_cols = (
   WHERE table_name = CONCAT('store_sale_denorm_bench_', SCALE)
 );
 
+SET create_query = '''
+CREATE TABLE IF NOT EXISTS blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sale_denorm_bench_''' || SCALE || '''
+CLUSTER BY ss_sold_date_sk
+WITH CONNECTION `cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl`
+OPTIONS (
+  file_format = 'PARQUET',
+  table_format = 'ICEBERG',
+  storage_uri = 'gs://bkt-lsdh-dev-ew9-bench-bl-lakehouse-ext-tb-00/blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb/''' || SCALE || '''/store_sale_denorm_bench'
+)
+AS SELECT ' || columns_list || ' FROM cacib-lsdh-dev-df.blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sales_denorm_start_''' || SCALE || ' WHERE 1=0
+''';
 
 SET load_query = '''
 INSERT INTO blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sale_denorm_bench_''' || SCALE || '''
