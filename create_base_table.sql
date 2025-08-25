@@ -13,7 +13,7 @@ EXECUTE IMMEDIATE FORMAT('DROP TABLE IF EXISTS blmt_ds_lsdh_dev_ew9_bench_bl_ib_
 EXECUTE IMMEDIATE FORMAT(
 'CREATE TABLE IF NOT EXISTS blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sales_denorm_start_%s
 CLUSTER BY ss_sold_date_sk
-WITH CONNECTION `cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl`
+WITH CONNECTION ``cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl``
 OPTIONS (
     file_format = ''PARQUET'',
     table_format = ''ICEBERG'',
@@ -24,7 +24,7 @@ SCALE, SCALE, SCALE);
 
 EXECUTE IMMEDIATE FORMAT(
 'CREATE TABLE IF NOT EXISTS blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sales_denorm_upsert_%s
-WITH CONNECTION `cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl`
+WITH CONNECTION ``cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl``
 OPTIONS (
     file_format = ''PARQUET'',
     table_format = ''ICEBERG'',
@@ -35,7 +35,7 @@ SCALE, SCALE, SCALE);
 
 EXECUTE IMMEDIATE FORMAT(
 'CREATE TABLE IF NOT EXISTS blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sales_denorm_insert_medium_%s
-WITH CONNECTION `cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl`
+WITH CONNECTION ``cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl``
 OPTIONS (
     file_format = ''PARQUET'',
     table_format = ''ICEBERG'',
@@ -46,7 +46,7 @@ SCALE, SCALE, SCALE);
 
 EXECUTE IMMEDIATE FORMAT(
 'CREATE TABLE IF NOT EXISTS blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sales_denorm_delete_medium_%s
-WITH CONNECTION `cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl`
+WITH CONNECTION ``cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl``
 OPTIONS (
     file_format = ''PARQUET'',
     table_format = ''ICEBERG'',
@@ -57,7 +57,7 @@ SCALE, SCALE, SCALE);
 
 EXECUTE IMMEDIATE FORMAT(
 'CREATE TABLE IF NOT EXISTS blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sales_denorm_delete_small_%s
-WITH CONNECTION `cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl`
+WITH CONNECTION ``cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl``
 OPTIONS (
     file_format = ''PARQUET'',
     table_format = ''ICEBERG'',
@@ -68,7 +68,7 @@ SCALE, SCALE, SCALE);
 
 EXECUTE IMMEDIATE FORMAT(
 'CREATE TABLE IF NOT EXISTS blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sales_denorm_delete_xsmall_%s
-WITH CONNECTION `cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl`
+WITH CONNECTION ``cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl``
 OPTIONS (
     file_format = ''PARQUET'',
     table_format = ''ICEBERG'',
