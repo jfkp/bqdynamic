@@ -1,1 +1,18 @@
 
+SET q2 = '''
+    SELECT s.ca_state AS state, COUNT(*) AS cnt
+    FROM store_sale_denorm_bench_''' || SCALE || ''' s
+    WHERE s.d_month_seq = (
+            SELECT DISTINCT d_month_seq
+            FROM store_sale_denorm_bench_''' || SCALE || '''
+            WHERE d_year = 2000 AND d_moy = 2
+    )
+    AND s.i_current_price > 1.2 * (
+            SELECT AVG(j.i_current_price)
+            FROM store_sale_denorm_bench_''' || SCALE || ''' j
+            WHERE j.i_category = s.i_category
+    )
+    GROUP BY s.ca_state
+    HAVING COUNT(*) >= 10
+    ORDER BY cnt, s.ca_state
+''';
