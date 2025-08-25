@@ -1,15 +1,11 @@
-BEGIN
-
 -- ===============================
--- Variables
+-- Managed Iceberg Tables Setup
 -- ===============================
-DECLARE SCALE STRING DEFAULT "10G";
-DECLARE DATASET STRING DEFAULT "blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb";  -- Dataset ID (must be valid)
-DECLARE EXT_DATASET STRING DEFAULT "bqms_ds_lsdh_dev_ew9_bench_bq_bl_ib_ext_tbl";
-DECLARE CONNECTION STRING DEFAULT "cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl";
-DECLARE BUCKET STRING DEFAULT "gs://bkt-lsdh-dev-ew9-bench-bl-lakehouse-ext-tb-00";
+DECLARE SCALE STRING DEFAULT '10G';
+DECLARE DATASET STRING DEFAULT 'blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb';
+DECLARE REGION STRING DEFAULT 'europe-west9';
 
--- List of tables to drop/recreate
+-- List of tables to create
 DECLARE tables ARRAY<STRING> DEFAULT [
   "store_sales_denorm_start",
   "store_sales_denorm_upsert",
@@ -26,27 +22,25 @@ DECLARE tables ARRAY<STRING> DEFAULT [
 -- ===============================
 FOR t IN (SELECT * FROM UNNEST(tables) AS table_name) DO
 
-  -- Drop table if exists
+  -- Drop table if it exists
   EXECUTE IMMEDIATE FORMAT("""
-    DROP TABLE IF EXISTS `region-europe-west9.%s.%s_%s`
-  """, DATASET, t.table_name, SCALE);
+    DROP TABLE IF EXISTS `region-%s.%s.%s_%s`
+  """, REGION, DATASET, t.table_name, SCALE);
 
-  -- Create Iceberg table from external source
+  -- Create managed Iceberg table
   EXECUTE IMMEDIATE FORMAT("""
-    CREATE TABLE IF NOT EXISTS `region-europe-west9.%s.%s_%s`
-    WITH CONNECTION `%s`
+    CREATE TABLE IF NOT EXISTS `region-%s.%s.%s_%s`
     OPTIONS (
-      file_format = 'PARQUET',
-      table_format = 'ICEBERG',
-      storage_uri = '%s/%s/%s_%s'
-    )
-    AS SELECT * FROM `region-europe-west9.%s.%s_%s`
+      table_format='ICEBERG'
+      %s
+    ) AS
+    SELECT *
+    FROM `region-%s.%s.%s_%s`
+    WHERE 1=0
   """,
-    DATASET, t.table_name, SCALE,       -- target table
-    CONNECTION, BUCKET, DATASET, t.table_name, SCALE,        -- Iceberg storage URI
-    EXT_DATASET, t.table_name, SCALE     -- source external table
+    REGION, DATASET, t.table_name, SCALE,                   -- target table
+    CASE WHEN t.table_name = "store_sales_denorm_start" THEN "clustering=[ss_sold_date_sk]" ELSE "" END,  -- cluster start table
+    REGION, "bqms_ds_lsdh_dev_ew9_bench_bq_bl_ib_ext_tbl", t.table_name, SCALE  -- source table
   );
 
 END FOR;
-
-END;
