@@ -135,3 +135,19 @@ SET q5 = '''
              AND ss_net_profit BETWEEN 50 AND 250)
       )
 ''';
+
+SET q6 = '''
+    SELECT 
+        i_brand_id AS brand_id,
+        i_brand AS brand,
+        i_manufact_id,
+        i_manufact,
+        SUM(ss_ext_sales_price) AS ext_price
+    FROM store_sale_denorm_bench_''' || SCALE || '''
+    WHERE i_manager_id = 7
+      AND d_moy = 11
+      AND d_year = 1999
+      AND SUBSTR(ca_zip, 1, 5) <> SUBSTR(s_zip, 1, 5)
+    GROUP BY i_brand, i_brand_id, i_manufact_id, i_manufact
+    ORDER BY ext_price DESC, i_brand, i_brand_id, i_manufact_id, i_manufact
+''';
