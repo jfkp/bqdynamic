@@ -3,7 +3,35 @@ DECLARE q1,q2,q3,q4,q5,q6,q7,q8,q9 , columns_list,update_cols, load_query,merge_
 DECLARE update_cols STRING;
 
 
-DECLARE queries ARRAY<STRUCT<name STRING, sql STRING>>;
+DECLARE r_queries ARRAY<STRUCT<name STRING, sql STRING>>;
+SET queries = [
+  STRUCT("r1" AS name, r1 AS sql),
+  STRUCT("r2" AS name, r2 AS sql),
+  STRUCT("r3" AS name, r3 AS sql),
+  STRUCT("r4" AS name, r4 AS sql),
+  STRUCT("r5" AS name, r5 AS sql),
+  STRUCT("r6" AS name, r6 AS sql),
+  STRUCT("r7" AS name, r7 AS sql),
+  STRUCT("r8" AS name, r8 AS sql),
+  STRUCT("r9" AS name, r9 AS sql)
+];
+
+DECLARE cycle INT64 DEFAULT 1;
+WHILE cycle <= 3 DO
+
+  -- Inner loop: execute each query sequentially
+  FOR q IN (SELECT * FROM UNNEST(queries)) DO
+    -- Print query name and cycle number
+    SELECT CONCAT("Cycle ", CAST(cycle AS STRING), ": Executing query ", q.name) AS log_message;
+
+    -- Execute query
+    EXECUTE IMMEDIATE q.sql;
+  END FOR;
+
+  SET cycle = cycle + 1;
+END WHILE;
+
+DECLARE w_queries ARRAY<STRUCT<name STRING, sql STRING>>;
 SET queries = [
   STRUCT("load_query"     AS name, load_query     AS sql),
   STRUCT("merge_insert"   AS name, merge_insert   AS sql),
