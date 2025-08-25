@@ -33,12 +33,12 @@ SET create_query = (
 EXECUTE IMMEDIATE create_query;
 
 -- 4 Insert data into the newly created table
-SET insert_query = '''
-INSERT INTO blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sale_denorm_bench_''' || SCALE || '''
-(' || columns_list || ')
-SELECT ' || columns_list || '
-FROM cacib-lsdh-dev-df.blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sales_denorm_start_''' || SCALE || '''
-''';
+SET insert_query = (
+  'INSERT INTO blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sale_denorm_bench_' || SCALE || ' (' ||
+    columns_list || ') ' ||
+  'SELECT ' || columns_list || ' ' ||
+  'FROM cacib-lsdh-dev-df.blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sales_denorm_start_' || SCALE
+);
 
 -- Execute data insert
 EXECUTE IMMEDIATE insert_query;
