@@ -1,3 +1,6 @@
+DECLARE SCALE STRING DEFAULT '10G';
+DECLARE q1,q2,q3,q4,q5,q6,q7,q8,q9 STRING;
+
 
 SET q2 = '''
     SELECT s.ca_state AS state, COUNT(*) AS cnt
@@ -94,3 +97,41 @@ SELECT
     END AS bucket5
 ''';
 
+SET q5 = '''
+    SELECT 
+        AVG(ss_quantity) AS avg_quantity,
+        AVG(ss_ext_sales_price) AS avg_sales_price,
+        AVG(ss_ext_wholesale_cost) AS avg_wholesale_cost,
+        SUM(ss_ext_wholesale_cost) AS total_wholesale_cost
+    FROM store_sale_denorm_bench_''' || SCALE || '''
+    WHERE d_year = 2001
+      AND (
+            (cd_marital_status = 'D'
+             AND cd_education_status = '2 yr Degree'
+             AND ss_sales_price BETWEEN 100.00 AND 150.00
+             AND hd_dep_count = 3)
+          OR
+            (cd_marital_status = 'S'
+             AND cd_education_status = 'Secondary'
+             AND ss_sales_price BETWEEN 50.00 AND 100.00
+             AND hd_dep_count = 1)
+          OR
+            (cd_marital_status = 'W'
+             AND cd_education_status = 'Advanced Degree'
+             AND ss_sales_price BETWEEN 150.00 AND 200.00
+             AND hd_dep_count = 1)
+      )
+      AND (
+            (ca_country = 'United States'
+             AND ca_state IN ('CO', 'IL', 'MN')
+             AND ss_net_profit BETWEEN 100 AND 200)
+          OR
+            (ca_country = 'United States'
+             AND ca_state IN ('OH', 'MT', 'NM')
+             AND ss_net_profit BETWEEN 150 AND 300)
+          OR
+            (ca_country = 'United States'
+             AND ca_state IN ('TX', 'MO', 'MI')
+             AND ss_net_profit BETWEEN 50 AND 250)
+      )
+''';
