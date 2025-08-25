@@ -151,3 +151,22 @@ SET q6 = '''
     GROUP BY i_brand, i_brand_id, i_manufact_id, i_manufact
     ORDER BY ext_price DESC, i_brand, i_brand_id, i_manufact_id, i_manufact
 ''';
+
+SET q7 = '''
+    SELECT 
+         i_item_id,
+        s_state,
+        GROUPING(s_state) AS g_state,
+        AVG(ss_quantity) AS agg1,
+        AVG(ss_list_price) AS agg2,
+        AVG(ss_coupon_amt) AS agg3,
+        AVG(ss_sales_price) AS agg4
+    FROM store_sale_denorm_bench_''' || SCALE || '''
+    WHERE cd_gender = 'F'
+      AND cd_marital_status = 'M'
+      AND cd_education_status = '4 yr Degree'
+      AND d_year = 2002
+      AND s_state IN ('NE', 'IN', 'SD', 'MN', 'TX', 'MN')
+    GROUP BY ROLLUP(i_item_id, s_state)
+    ORDER BY i_item_id, s_state
+''';
