@@ -1,6 +1,16 @@
 DECLARE SCALE STRING DEFAULT '10G';
-DECLARE q1,q2,q3,q4,q5,q6,q7,q8,q9 merge_insert,merge_update,merge_sdelete,merge_xdelete,merge_mdelete,d_delete STRING;
+DECLARE q1,q2,q3,q4,q5,q6,q7,q8,q9 , columns_list,update_cols, load_query,merge_insert,merge_update,merge_sdelete,merge_xdelete,merge_mdelete,d_delete STRING;
 DECLARE update_cols STRING;
+
+DECLARE  STRING;
+
+-- Generate comma-separated column list from the source table
+SET columns_list = (
+  SELECT STRING_AGG(column_name)
+  FROM `cacib-lsdh-dev-df.blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.INFORMATION_SCHEMA.COLUMNS`
+  WHERE table_name = 'store_sales_denorm_start_' || SCALE
+  ORDER BY ordinal_position
+);
 
 SET update_cols = (
   SELECT STRING_AGG('a.' || column_name || ' = b.' || column_name)
@@ -8,6 +18,13 @@ SET update_cols = (
   WHERE table_name = CONCAT('store_sale_denorm_bench_', SCALE)
 );
 
+
+SET load_query = '''
+INSERT INTO blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sale_denorm_bench_''' || SCALE || '''
+(' || columns_list || ')
+SELECT ' || columns_list || '
+FROM cacib-lsdh-dev-df.blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sales_denorm_start_''' || SCALE || ''' 
+''';
 
 SET q2 = '''
     SELECT s.ca_state AS state, COUNT(*) AS cnt
