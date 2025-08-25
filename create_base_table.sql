@@ -1,4 +1,8 @@
--- Declare variables
+BEGIN
+
+-- ===============================
+-- Variables
+-- ===============================
 DECLARE SCALE STRING DEFAULT "10G";
 DECLARE PROJECT STRING DEFAULT "cacib-lsdh-dev-df";
 DECLARE DATASET STRING DEFAULT "blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb";
@@ -18,13 +22,15 @@ DECLARE tables ARRAY<STRING> DEFAULT [
   "store_sales_denorm_delete_upsert"
 ];
 
--- Loop over each table
+-- ===============================
+-- Loop over tables
+-- ===============================
 FOR t IN (SELECT * FROM UNNEST(tables) AS table_name) DO
 
   -- Drop table if exists
   EXECUTE IMMEDIATE FORMAT("""
     DROP TABLE IF EXISTS `region-europe-west9.%s.%s_%s`
-  """, PROJECT, DATASET, t.table_name, SCALE);
+  """, PROJECT, DATASET, t.table_name || "_" || SCALE);
 
   -- Create table from external source
   EXECUTE IMMEDIATE FORMAT("""
@@ -37,9 +43,11 @@ FOR t IN (SELECT * FROM UNNEST(tables) AS table_name) DO
     )
     AS SELECT * FROM `region-europe-west9.%s.%s_%s`
   """,
-    PROJECT, DATASET, t.table_name, SCALE,          -- target table
-    CONNECTION, BUCKET, DATASET, t.table_name, SCALE, -- Iceberg storage URI
-    PROJECT, EXT_DATASET, t.table_name, SCALE       -- source external table
+    PROJECT, DATASET, t.table_name || "_" || SCALE,       -- target table
+    CONNECTION, BUCKET, DATASET, t.table_name, SCALE,     -- Iceberg storage URI
+    PROJECT, EXT_DATASET, t.table_name || "_" || SCALE     -- source external table
   );
 
 END FOR;
+
+END;
