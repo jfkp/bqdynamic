@@ -4,8 +4,8 @@ BEGIN
 -- Variables
 -- ===============================
 DECLARE SCALE STRING DEFAULT "10G";
-DECLARE PROJECT STRING DEFAULT "cacib-lsdh-dev-df";
-DECLARE DATASET STRING DEFAULT "blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb";
+DECLARE PROJECT_ID STRING DEFAULT "cacib-lsdh-dev-df";  -- Project ID (can have hyphens)
+DECLARE DATASET STRING DEFAULT "blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb";  -- Dataset ID (must be valid)
 DECLARE EXT_DATASET STRING DEFAULT "bqms_ds_lsdh_dev_ew9_bench_bq_bl_ib_ext_tbl";
 DECLARE CONNECTION STRING DEFAULT "cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl";
 DECLARE BUCKET STRING DEFAULT "gs://bkt-lsdh-dev-ew9-bench-bl-lakehouse-ext-tb-00";
@@ -30,9 +30,9 @@ FOR t IN (SELECT * FROM UNNEST(tables) AS table_name) DO
   -- Drop table if exists
   EXECUTE IMMEDIATE FORMAT("""
     DROP TABLE IF EXISTS `region-europe-west9.%s.%s_%s`
-  """, PROJECT, DATASET, t.table_name || "_" || SCALE);
+  """, PROJECT_ID, DATASET, t.table_name || "_" || SCALE);
 
-  -- Create table from external source
+  -- Create Iceberg table from external source
   EXECUTE IMMEDIATE FORMAT("""
     CREATE TABLE IF NOT EXISTS `region-europe-west9.%s.%s_%s`
     WITH CONNECTION `%s`
@@ -43,9 +43,9 @@ FOR t IN (SELECT * FROM UNNEST(tables) AS table_name) DO
     )
     AS SELECT * FROM `region-europe-west9.%s.%s_%s`
   """,
-    PROJECT, DATASET, t.table_name || "_" || SCALE,       -- target table
-    CONNECTION, BUCKET, DATASET, t.table_name, SCALE,     -- Iceberg storage URI
-    PROJECT, EXT_DATASET, t.table_name || "_" || SCALE     -- source external table
+    PROJECT_ID, DATASET, t.table_name || "_" || SCALE,       -- target table
+    CONNECTION, BUCKET, DATASET, t.table_name, SCALE,        -- Iceberg storage URI
+    PROJECT_ID, EXT_DATASET, t.table_name || "_" || SCALE     -- source external table
   );
 
 END FOR;
