@@ -402,6 +402,55 @@ df_query = load_metrics(files, metric_type="query")
 df_timeline = prepare_update_read_timeline(df_update, df_query)
 plot_update_read_timeline(df_timeline)
 
+
+
+def load_seq_metrics(files, metric_type="query"):
+    """
+    Load multiple CSVs (scale × technology) and return a long-format DataFrame.
+    """
+    metrics_map = {
+        "exec_time": "exec_time",
+        "numStages": "num_stages",
+        "numTasks": "num_tasks",
+        "executorRunTime": "executor_runtime",
+        "executorCpuTime": "executor_cpu_time",
+        "memoryBytesSpilled": "mem_spilled",
+        "diskBytesSpilled": "disk_spilled",
+        "bytesRead": "bytes_read",
+        "recordsRead": "records_read",
+        "bytesWritten": "bytes_written",
+        "recordsWritten": "records_written",
+        "shuffleTotalBytesRead": "shuffle_bytes_read",
+        "shuffleBytesWritten": "shuffle_bytes_written"
+    }
+
+    # Keep the query name + reference to update query
+    extra_fields = ["query", "wquery", "timestamp", "run_id"]  # <-- make sure wquery is here
+
+    long_data = []
+
+    for scale, tech_files in files.items():
+        for tech, file in tech_files.items():
+            df = pd.read_csv(file)
+            # Keep only relevant columns
+            cols_to_keep = [c for c in metrics_map.keys() if c in df.columns] + \
+                           [c for c in extra_fields if c in df.columns]
+            df = df[cols_to_keep].copy()
+
+            for idx, row_data in df.iterrows():
+                row_dict = {"scale": scale, "technology": tech}
+                for f in extra_fields:
+                    if f in row_data:
+                        row_dict[f] = row_data[f]
+
+                for orig, new in metrics_map.items():
+                    if orig in row_data:
+                        row_dict[new] = row_data[orig]
+
+                long_data.append(row_dict)
+
+    return pd.DataFrame(long_data)
+
 def prepare_update_read_sequence(df_update, df_query):
     rows = []
 
