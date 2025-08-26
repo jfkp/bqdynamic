@@ -111,7 +111,44 @@ def plot_combined_w_r_metrics(df_long, metric="exec_time"):
     fig.update_xaxes(tickangle=-45)
     fig.show()
 
+def plot_combined_metrics_with_annotations(df_long, metric="exec_time"):
+    """
+    Plot grouped bar chart for update queries vs their associated query runs,
+    with annotations showing the associated read query on top of query bars.
+    """
+    fig = px.bar(
+        df_long,
+        x="query",                     # update query
+        y=metric,
+        color="technology",
+        barmode="group",
+        facet_col="scale",
+        pattern_shape="run_type",
+        hover_data=[c for c in df_long.columns if c not in ["query", "scale", "technology", metric]]
+    )
 
+    # Add annotations for query runs (read queries)
+    for i, row in df_long.iterrows():
+        if row["run_type"] == "query" and pd.notna(row.get("associated_update_query")):
+            fig.add_annotation(
+                x=row["query"],
+                y=row[metric],
+                text=row.get("query", ""),  # you can show the query name or wquery
+                showarrow=False,
+                yshift=10,
+                font=dict(size=9, color="black"),
+                xanchor="center"
+            )
+
+    fig.update_layout(
+        title=f"Update Queries vs Associated Query Runs Execution Time",
+        xaxis_title="Update Query",
+        yaxis_title=metric,
+        height=700,
+        template="plotly_white"
+    )
+    fig.update_xaxes(tickangle=-45)
+    fig.show()
 # ----------------------------
 # Example usage
 # ----------------------------
@@ -129,3 +166,13 @@ df_combined = pd.concat([df_update, df_query], ignore_index=True)
 
 # Plot combined execution time
 plot_combined_w_r_metrics(df_combined, metric="exec_time")
+
+
+# Load metrics
+df_update = load_metrics(files, metric_type="update")
+df_query = load_metrics(files, metric_type="query")
+
+# Plot
+plot_update_and_reads(df_update, df_query, metric="exec_time")
+
+
