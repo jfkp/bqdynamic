@@ -309,6 +309,82 @@ def load_metrics(files, metric_type="update"):
     return pd.DataFrame(long_data)
 
 
+import pandas as pd
+import plotly.express as px
+
+def prepare_update_read_timeline(df_update, df_query):
+    # Step 1: aggregate query metrics (mean per wquery + query)
+    df_query_mean = (
+        df_query.groupby(["wquery", "query", "scale", "technology"], as_index=False)
+        .agg({"exec_time": "mean"})
+    )
+
+    # Step 2: unify update metrics
+    df_update_clean = df_update[["query", "scale", "technology", "exec_time"]].copy()
+    df_update_clean["type"] = "update"
+    df_update_clean.rename(columns={"query": "update_query"}, inplace=True)
+
+    df_query_mean["type"] = "read"
+    df_query_mean.rename(columns={"wquery": "update_query", "query": "read_query"}, inplace=True)
+
+    # Step 3: assign plotting order
+    result = []
+    for uq in df_update_clean["update_query"].unique():
+        for scale in df_update_clean["scale"].unique():
+            for tech in df_update_clean["technology"].unique():
+                # update row
+                urow = df_update_clean[
+                    (df_update_clean["update_query"] == uq) &
+                    (df_update_clean["scale"] == scale) &
+                    (df_update_clean["technology"] == tech)
+                ]
+                if not urow.empty:
+                    urow = urow.copy()
+                    urow["plot_label"] = urow["update_query"]
+                    urow["order"] = 0
+                    result.append(urow)
+
+                # associated read queries
+                qrows = df_query_mean[
+                    (df_query_mean["update_query"] == uq) &
+                    (df_query_mean["scale"] == scale) &
+                    (df_query_mean["technology"] == tech)
+                ].copy()
+                if not qrows.empty:
+                    qrows["plot_label"] = qrows["read_query"]
+                    qrows["order"] = qrows.groupby("update_query").cumcount() + 1
+                    result.append(qrows)
+
+    return pd.concat(result, ignore_index=True)
+
+
+def plot_update_read_timeline(df_timeline):
+    fig = px.bar(
+        df_timeline,
+        x="plot_label",
+        y="exec_time",
+        color="technology",
+        facet_col="scale",
+        barmode="group",
+        text="type",  # annotate update vs read
+        category_orders={"plot_label": list(df_timeline.sort_values("order")["plot_label"].unique())}
+    )
+    fig.update_layout(
+        title="Update Queries with Their Associated Read Queries (Mean Exec Time)",
+        xaxis_title="Query sequence",
+        yaxis_title="Execution time (s)",
+        height=700,
+        template="plotly_white"
+    )
+    fig.show()
+
+
+df_update = load_metrics(files, metric_type="update")
+df_query = load_metrics(files, metric_type="query")
+
+df_timeline = prepare_update_read_timeline(df_update, df_query)
+plot_update_read_timeline(df_timeline)
+
 
 
 # ----------------------------
