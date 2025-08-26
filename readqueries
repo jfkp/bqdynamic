@@ -1,0 +1,17 @@
+
+
+query_metrics = {
+    "exec_time": "exec_time",
+    "numStages": "num_stages",
+    "numTasks": "num_tasks",
+    "executorRunTime": "executor_runtime",
+    "executorCpuTime": "executor_cpu_time",
+    "memoryBytesSpilled": "mem_spilled",
+    "diskBytesSpilled": "disk_spilled",
+    "bytesRead": "bytes_read",
+    "recordsRead": "records_read",
+    "bytesWritten": "bytes_written",
+    "recordsWritten": "records_written",
+    "shuffleTotalBytesRead": "shuffle_bytes_read",
+    "shuffleBytesWritten": "shuffle_bytes_written"
+}
