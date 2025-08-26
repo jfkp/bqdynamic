@@ -101,4 +101,14 @@ def plot_metrics(df_long, metric="exec_time"):
     fig.update_xaxes(tickangle=-45)
     fig.show()
 
+# Load update metrics
+df_update = load_metrics(files, metric_type="update")
 
+# Plot update execution time
+plot_metrics(df_update, metric="exec_time")
+
+# Load query metrics
+df_query = load_metrics(files, metric_type="query")
+
+# Plot query execution time
+plot_metrics(df_query, metric="exec_time")
