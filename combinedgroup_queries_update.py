@@ -450,8 +450,11 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 def plot_update_read_sequence(df_seq):
-    # Ensure correct ordering (updates first, then reads for each update)
+    # Ensure correct ordering
     df_seq = df_seq.sort_values(["scale", "parent_update", "seq_id"]).reset_index(drop=True)
+
+    # Make sure seq_id is numeric
+    df_seq["seq_id"] = pd.to_numeric(df_seq["seq_id"], errors="coerce")
 
     fig = px.bar(
         df_seq,
@@ -468,12 +471,13 @@ def plot_update_read_sequence(df_seq):
     update_indices = df_seq[df_seq["type"] == "update"].index.tolist()
     for idx in update_indices:
         x_pos = df_seq.loc[idx, "seq_id"]
-        fig.add_vline(
-            x=x_pos - 0.5,  # place before the update bar
-            line_width=1,
-            line_dash="dash",
-            line_color="grey"
-        )
+        if pd.notna(x_pos):  # only if it's numeric
+            fig.add_vline(
+                x=x_pos - 0.5,
+                line_width=1,
+                line_dash="dash",
+                line_color="grey"
+            )
 
     fig.update_layout(
         title="Update Queries followed by their Read Queries",
@@ -491,8 +495,6 @@ def plot_update_read_sequence(df_seq):
     )
 
     fig.show()
-
-
 
 # ----------------------------
 # Example usage
