@@ -154,68 +154,68 @@ def plot_combined_metrics_with_annotations(df_long, metric="exec_time"):
 
 def plot_update_and_reads(df_update, df_query, metric="exec_time"):
     """
-    Plot update queries with all associated read queries executed after each update.
-    Read queries are ordered by timestamp (or run_id if timestamp missing).
-    
-    df_update: DataFrame of update metrics (field 'query' = update query name)
-    df_query: DataFrame of read/query metrics (field 'query' = read query, 'wquery' = update query reference)
+    Plot update queries along with their associated read queries.
+    Uses 'query' in df_update as update query name,
+    and 'wquery' in df_query to associate read queries.
     """
-    # --- Prepare update DataFrame ---
-    df_update_plot = df_update.copy()
-    df_update_plot["query_type"] = "update"
-    df_update_plot = df_update_plot.rename(columns={"query": "update_query"})
-    df_update_plot["read_query"] = None   # placeholder for consistency
+    # Step 1: merge queries with updates ON (wquery == update.query) + scale + technology
+    df_merged = df_query.merge(
+        df_update[["query", "scale", "technology"]],
+        left_on=["wquery", "scale", "technology"],
+        right_on=["query", "scale", "technology"],
+        suffixes=("_read", "_update")
+    )
 
-    # --- Prepare read/query DataFrame ---
-    df_read_plot = df_query.copy()
-    df_read_plot["query_type"] = "read_query"
-    df_read_plot = df_read_plot.rename(columns={"wquery": "update_query"})  # assign to update query
-    df_read_plot["read_query"] = df_read_plot["query"]  # keep original query name for labeling
-    df_read_plot.drop(columns=["query"], inplace=True)  # avoid confusion
+    # Step 2: Concatenate update and its reads
+    update_df = df_update.copy()
+    update_df["query_type"] = "update"
+    update_df["query_display"] = update_df["query"]
 
-    # Ensure order of read queries per update
-    if "timestamp" in df_read_plot.columns:
-        df_read_plot = df_read_plot.sort_values(by=["update_query", "timestamp"])
-    elif "run_id" in df_read_plot.columns:
-        df_read_plot = df_read_plot.sort_values(by=["update_query", "run_id"])
+    read_df = df_merged.copy()
+    read_df["query_type"] = "read"
+    read_df["query_display"] = read_df["query_read"]
 
-    # --- Combine both ---
-    df_combined = pd.concat([df_update_plot, df_read_plot], ignore_index=True)
+    combined = pd.concat([
+        update_df[["scale", "technology", "query_display", "query_type", metric]],
+        read_df[["scale", "technology", "query_display", "query_type", metric]]
+    ])
 
-    # --- Plot ---
+    # Step 3: Plot
     fig = px.bar(
-        df_combined,
-        x="update_query",
+        combined,
+        x="query_display",
         y=metric,
         color="technology",
         barmode="group",
-        pattern_shape="query_type",
-        facet_col="scale" if "scale" in df_combined.columns else None,
-        hover_data=[c for c in df_combined.columns if c not in ["update_query", "query_type", metric, "technology"]]
+        facet_col="scale",
+        hover_data=["query_type"]
     )
 
-    # --- Add annotations for read queries ---
-    for i, row in df_combined.iterrows():
-        if row["query_type"] == "read_query":
-            fig.add_annotation(
-                x=row["update_query"],
-                y=row[metric],
-                text=row["read_query"],  # show read query name
-                showarrow=False,
-                yshift=8,
-                font=dict(size=9, color="black"),
-                xanchor="center"
+    # Annotate read queries with their name
+    annotations = []
+    for i, row in combined.iterrows():
+        if row["query_type"] == "read":
+            annotations.append(
+                dict(
+                    x=row["query_display"],
+                    y=row[metric],
+                    text=row["query_display"],
+                    showarrow=False,
+                    font=dict(size=10, color="black")
+                )
             )
+    fig.update_layout(annotations=annotations)
 
     fig.update_layout(
-        title=f"Update Queries with Associated Read Queries ({metric})",
-        xaxis_title="Update Query",
+        title=f"{metric} Update + Read Queries",
+        xaxis_title="Query",
         yaxis_title=metric,
         height=700,
         template="plotly_white"
     )
     fig.update_xaxes(tickangle=-45)
     fig.show()
+
 
 def load_metrics(files, metric_type="update"):
     """
