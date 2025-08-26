@@ -102,29 +102,3 @@ def plot_metrics(df_long, metric="exec_time"):
     fig.show()
 
 
-
-
-def plot_metrics(df_long, metric="exec_time"):
-    """
-    Plot interactive grouped bar chart of a metric across scales and technologies.
-    """
-    fig = px.bar(
-        df_long,
-        x="query",
-        y=metric,
-        color="technology",
-        barmode="group",
-        facet_col="scale",
-        hover_data=[c for c in df_long.columns if c not in ["query", "scale", "technology", metric]]
-    )
-
-    fig.update_layout(
-        title=f"{metric} Comparison Across Technologies and Scales",
-        xaxis_title="Query",
-        yaxis_title=metric,
-        height=700,
-        template="plotly_white"
-    )
-    fig.update_xaxes(tickangle=-45)
-    fig.show()
-
