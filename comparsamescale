@@ -1,0 +1,42 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+queries = df_merged['query']
+x = np.arange(len(queries))
+width = 0.25
+colors = ['skyblue', 'salmon', 'lightgreen']
+
+plt.figure(figsize=(16,8))
+
+for i, tech in enumerate(technologies):
+    exec_time = df_merged[f'exec_time_{tech}']
+    rows = df_merged[f's_after_added-records_{tech}'].fillna(0) + df_merged[f's_before_added-records_{tech}'].fillna(0)
+    size_mb = (df_merged[f's_after_removed-files-size_{tech}'].fillna(0) + df_merged[f's_before_removed-files-size_{tech}'].fillna(0)) / (1024*1024)
+    file_count = df_merged[f's_after_total-data-files_{tech}'].fillna(0).astype(int)
+    total_size_gb = df_merged[f's_after_total-files-size_{tech}'].fillna(0) / (1024*1024*1024)
+    
+    bars = plt.bar(x + i*width, exec_time, width, color=colors[i], alpha=0.8, label=tech)
+    
+    # Compact annotations
+    for bar, r, s, fcount, fsize in zip(bars, rows, size_mb, file_count, total_size_gb):
+        height = bar.get_height()
+        rows_str = f"{r/1000:.1f}k" if r >= 1000 else f"{int(r)}"
+        size_str = f"{s:.1f}MB" if s < 1024 else f"{s/1024:.1f}GB"
+        plt.text(
+            bar.get_x() + bar.get_width()/2,
+            height + 0.01*max(exec_time),
+            f"{rows_str} r, {size_str}, {fcount} f, {fsize:.2f} GB",
+            ha='center',
+            va='bottom',
+            fontsize=7
+        )
+
+# Formatting
+plt.title("Query Execution Time Comparison Across Technologies (10G Scale)", fontsize=16)
+plt.xlabel("Query", fontsize=12)
+plt.ylabel("Execution Time (seconds)", fontsize=12)
+plt.xticks(x + width*(len(technologies)-1)/2, queries, rotation=45, ha='right')
+plt.grid(axis='y', linestyle='--', alpha=0.6)
+plt.legend()
+plt.tight_layout()
+plt.show()
