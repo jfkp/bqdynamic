@@ -149,6 +149,79 @@ def plot_combined_metrics_with_annotations(df_long, metric="exec_time"):
     )
     fig.update_xaxes(tickangle=-45)
     fig.show()
+
+
+import plotly.express as px
+
+def plot_update_and_reads(df_update, df_query, metric="exec_time"):
+    """
+    Plot update queries with all associated read queries executed after each update.
+    Read queries are ordered by timestamp (or run_id if timestamp missing).
+    
+    df_update: DataFrame of update metrics (field 'query' = update query name)
+    df_query: DataFrame of read/query metrics (field 'query' = read query, 'wquery' = update query reference)
+    """
+    # --- Prepare update DataFrame ---
+    df_update_plot = df_update.copy()
+    df_update_plot["query_type"] = "update"
+    df_update_plot = df_update_plot.rename(columns={"query": "update_query"})
+    df_update_plot["read_query"] = None   # placeholder for consistency
+
+    # --- Prepare read/query DataFrame ---
+    df_read_plot = df_query.copy()
+    df_read_plot["query_type"] = "read_query"
+    df_read_plot = df_read_plot.rename(columns={"wquery": "update_query"})  # assign to update query
+    df_read_plot["read_query"] = df_read_plot["query"]  # keep original query name for labeling
+    df_read_plot.drop(columns=["query"], inplace=True)  # avoid confusion
+
+    # Ensure order of read queries per update
+    if "timestamp" in df_read_plot.columns:
+        df_read_plot = df_read_plot.sort_values(by=["update_query", "timestamp"])
+    elif "run_id" in df_read_plot.columns:
+        df_read_plot = df_read_plot.sort_values(by=["update_query", "run_id"])
+
+    # --- Combine both ---
+    df_combined = pd.concat([df_update_plot, df_read_plot], ignore_index=True)
+
+    # --- Plot ---
+    fig = px.bar(
+        df_combined,
+        x="update_query",
+        y=metric,
+        color="technology",
+        barmode="group",
+        pattern_shape="query_type",
+        facet_col="scale" if "scale" in df_combined.columns else None,
+        hover_data=[c for c in df_combined.columns if c not in ["update_query", "query_type", metric, "technology"]]
+    )
+
+    # --- Add annotations for read queries ---
+    for i, row in df_combined.iterrows():
+        if row["query_type"] == "read_query":
+            fig.add_annotation(
+                x=row["update_query"],
+                y=row[metric],
+                text=row["read_query"],  # show read query name
+                showarrow=False,
+                yshift=8,
+                font=dict(size=9, color="black"),
+                xanchor="center"
+            )
+
+    fig.update_layout(
+        title=f"Update Queries with Associated Read Queries ({metric})",
+        xaxis_title="Update Query",
+        yaxis_title=metric,
+        height=700,
+        template="plotly_white"
+    )
+    fig.update_xaxes(tickangle=-45)
+    fig.show()
+
+
+
+
+
 # ----------------------------
 # Example usage
 # ----------------------------
@@ -166,6 +239,14 @@ df_combined = pd.concat([df_update, df_query], ignore_index=True)
 
 # Plot combined execution time
 plot_combined_w_r_metrics(df_combined, metric="exec_time")
+
+
+# Load metrics
+df_update = load_metrics(files, metric_type="update")
+df_query = load_metrics(files, metric_type="query")
+
+# Plot
+plot_update_and_reads(df_update, df_query, metric="exec_time")
 
 
 # Load metrics
