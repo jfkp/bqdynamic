@@ -446,29 +446,52 @@ def prepare_update_read_sequence(df_update, df_query):
     return pd.DataFrame(rows)
 
 
+import plotly.express as px
+import plotly.graph_objects as go
+
 def plot_update_read_sequence(df_seq):
-    df_seq = df_seq.sort_values(["scale", "parent_update", "seq_id"])
+    # Ensure correct ordering (updates first, then reads for each update)
+    df_seq = df_seq.sort_values(["scale", "parent_update", "seq_id"]).reset_index(drop=True)
 
     fig = px.bar(
         df_seq,
         x="seq_id",
         y="exec_time",
-        color="technology",
+        color="technology",          # color by technology
+        pattern_shape="type",        # ✅ different fill for update vs read
         facet_col="scale",
-        text="query",   # ✅ show query name for both update and read queries
+        text="query",                # ✅ show query name on top of each bar
         hover_data=["parent_update", "query", "type", "technology"]
     )
+
+    # Add vertical separators at each update start
+    update_indices = df_seq[df_seq["type"] == "update"].index.tolist()
+    for idx in update_indices:
+        x_pos = df_seq.loc[idx, "seq_id"]
+        fig.add_vline(
+            x=x_pos - 0.5,  # place before the update bar
+            line_width=1,
+            line_dash="dash",
+            line_color="grey"
+        )
 
     fig.update_layout(
         title="Update Queries followed by their Read Queries",
         xaxis_title="Update + Read Query Sequence",
         yaxis_title="Execution Time (s)",
         height=700,
-        template="plotly_white"
+        template="plotly_white",
+        legend_title="Technology"
     )
 
-    fig.update_traces(textposition="outside")
+    # Better annotation placement
+    fig.update_traces(
+        textposition="outside",
+        marker=dict(line=dict(width=0.5, color="black"))
+    )
+
     fig.show()
+
 
 
 # ----------------------------
