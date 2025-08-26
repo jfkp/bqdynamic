@@ -383,75 +383,6 @@ def plot_update_read_timeline(df_timeline):
 import pandas as pd
 import plotly.express as px
 
-def prepare_update_read_sequence(df_update, df_query):
-    rows = []
-
-    for (scale, tech), group in df_update.groupby(["scale", "technology"]):
-        for _, update_row in group.iterrows():
-            uq = update_row["query"]
-
-            # 1. Add the update query first
-            rows.append({
-                "scale": scale,
-                "technology": tech,
-                "parent_update": uq,
-                "query": uq,
-                "exec_time": update_row["exec_time"],
-                "type": "update",
-                "seq_id": f"{uq}_0"
-            })
-
-            # 2. Add its associated read queries in order
-            assoc_reads = df_query[
-                (df_query["wquery"] == uq) &
-                (df_query["scale"] == scale) &
-                (df_query["technology"] == tech)
-            ].copy()
-
-            if not assoc_reads.empty:
-                assoc_reads = assoc_reads.groupby("query", as_index=False).agg({"exec_time": "mean"})
-                assoc_reads = assoc_reads.sort_values("query")  # ensure Q1..Qn order
-
-                for i, row in enumerate(assoc_reads.itertuples(), start=1):
-                    rows.append({
-                        "scale": scale,
-                        "technology": tech,
-                        "parent_update": uq,
-                        "query": row.query,
-                        "exec_time": row.exec_time,
-                        "type": "read",
-                        "seq_id": f"{uq}_{i}"
-                    })
-
-    df_seq = pd.DataFrame(rows)
-    return df_seq
-
-
-def plot_update_read_sequence(df_seq):
-    # Ensure X-axis is ordered strictly by seq_id
-    df_seq = df_seq.sort_values(["scale", "parent_update", "seq_id"])
-
-    fig = px.bar(
-        df_seq,
-        x="seq_id",
-        y="exec_time",
-        color="technology",
-        facet_col="scale",
-        text="query",     # show query name above bar (update or read)
-        hover_data=["parent_update", "type", "technology"]
-    )
-
-    fig.update_layout(
-        title="Update Queries followed by their Read Queries",
-        xaxis_title="Sequence (Update + Reads)",
-        yaxis_title="Execution Time (s)",
-        height=700,
-        template="plotly_white"
-    )
-
-    fig.update_traces(textposition="outside")
-    fig.show()
-
 
 # load both datasets
 df_update = load_metrics(files, metric_type="update")
@@ -471,6 +402,73 @@ df_query = load_metrics(files, metric_type="query")
 df_timeline = prepare_update_read_timeline(df_update, df_query)
 plot_update_read_timeline(df_timeline)
 
+def prepare_update_read_sequence(df_update, df_query):
+    rows = []
+
+    for (scale, tech), group in df_update.groupby(["scale", "technology"]):
+        for _, update_row in group.iterrows():
+            uq = update_row["query"]
+
+            # 1. Add the update query first
+            rows.append({
+                "scale": scale,
+                "technology": tech,
+                "parent_update": uq,
+                "query": uq,   # keep own name
+                "exec_time": update_row["exec_time"],
+                "type": "update",
+                "seq_id": f"{uq}_0"
+            })
+
+            # 2. Add its associated read queries
+            assoc_reads = df_query[
+                (df_query["wquery"] == uq) &
+                (df_query["scale"] == scale) &
+                (df_query["technology"] == tech)
+            ].copy()
+
+            if not assoc_reads.empty:
+                # mean exec time per query name
+                assoc_reads = assoc_reads.groupby("query", as_index=False).agg({"exec_time": "mean"})
+                assoc_reads = assoc_reads.sort_values("query")  # enforce Q1..Qn order
+
+                for i, row in enumerate(assoc_reads.itertuples(), start=1):
+                    rows.append({
+                        "scale": scale,
+                        "technology": tech,
+                        "parent_update": uq,
+                        "query": row.query,   # label with query name (Q1, Q2…)
+                        "exec_time": row.exec_time,
+                        "type": "read",
+                        "seq_id": f"{uq}_{i}"
+                    })
+
+    return pd.DataFrame(rows)
+
+
+def plot_update_read_sequence(df_seq):
+    df_seq = df_seq.sort_values(["scale", "parent_update", "seq_id"])
+
+    fig = px.bar(
+        df_seq,
+        x="seq_id",
+        y="exec_time",
+        color="technology",
+        facet_col="scale",
+        text="query",   # ✅ show query name for both update and read queries
+        hover_data=["parent_update", "query", "type", "technology"]
+    )
+
+    fig.update_layout(
+        title="Update Queries followed by their Read Queries",
+        xaxis_title="Update + Read Query Sequence",
+        yaxis_title="Execution Time (s)",
+        height=700,
+        template="plotly_white"
+    )
+
+    fig.update_traces(textposition="outside")
+    fig.show()
 
 
 # ----------------------------
