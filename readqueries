@@ -15,3 +15,47 @@ query_metrics = {
     "shuffleTotalBytesRead": "shuffle_bytes_read",
     "shuffleBytesWritten": "shuffle_bytes_written"
 }
+
+
+def load_query_metrics(files, scales, technologies):
+    """
+    files: dict[scale][technology] = path
+    Example: 
+      files = {
+         "10G": {"Iceberg": "iceberg_10G.csv", "BigQuery": "bq_10G.csv"},
+         "100G": {"Iceberg": "iceberg_100G.csv", "BigQuery": "bq_100G.csv"}
+      }
+    """
+    query_metrics = {
+        "exec_time": "exec_time",
+        "numStages": "num_stages",
+        "numTasks": "num_tasks",
+        "executorRunTime": "executor_runtime",
+        "executorCpuTime": "executor_cpu_time",
+        "memoryBytesSpilled": "mem_spilled",
+        "diskBytesSpilled": "disk_spilled",
+        "bytesRead": "bytes_read",
+        "recordsRead": "records_read",
+        "bytesWritten": "bytes_written",
+        "recordsWritten": "records_written",
+        "shuffleTotalBytesRead": "shuffle_bytes_read",
+        "shuffleBytesWritten": "shuffle_bytes_written"
+    }
+
+    data = []
+    for scale, tech_files in files.items():
+        for tech, path in tech_files.items():
+            df = pd.read_csv(path)
+
+            for q in df["query"].unique():
+                subset = df[df["query"] == q]
+                row = subset.iloc[0]   # take first run (or subset.mean() if multiple reruns)
+
+                data.append({
+                    "query": q,
+                    "scale": scale,
+                    "technology": tech,
+                    **{new: row[orig] for orig, new in query_metrics.items() if orig in row}
+                })
+
+    return pd.DataFrame(data)
