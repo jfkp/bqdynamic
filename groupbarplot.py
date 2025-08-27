@@ -1,120 +1,92 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
+import numpy as np
 
+def load_and_prepare(files):
+    all_data = []
 
-def plot_grouped_bars_with_labels(df):
-    sns.set(style="whitegrid")
-    scales = df['scale'].unique()
-    
-    for scale in scales:
-        plt.figure(figsize=(12, 6))
-        df_scale = df[df['scale'] == scale]
-
-        # Sort for consistent plotting
-        df_scale = df_scale.sort_values(by=['update_query', 'query'])
-
-        # Create grouped barplot
-        ax = sns.barplot(
-            data=df_scale,
-            x='update_query',
-            y='exec_time',
-            hue='query',
-            ci=None
-        )
-
-        # Annotate read query bars
-        for p, query_name, update_query in zip(ax.patches, df_scale['query'], df_scale['update_query']):
-            # Only annotate read queries
-            is_read = query_name != update_query
-            if is_read:
-                height = p.get_height()
-                ax.annotate(
-                    query_name,
-                    (p.get_x() + p.get_width() / 2., height),
-                    ha='center',
-                    va='bottom',
-                    fontsize=8,
-                    rotation=90
-                )
-
-        plt.title(f"Execution Time per Query (Scale: {scale})")
-        plt.ylabel("Execution Time (s)")
-        plt.xlabel("Update Query")
-        plt.xticks(rotation=45)
-        plt.legend(title="Query", bbox_to_anchor=(1.05, 1), loc='upper left')
-        plt.tight_layout()
-        plt.show()
-
-def load_and_prepare(files_dict):
-    dfs = []
-    for scale, tech_dict in files_dict.items():
-        for tech, file_dict in tech_dict.items():
+    for scale, tech_files in files.items():
+        for tech, paths in tech_files.items():
             # Load update queries
-            df_update = pd.read_csv(file_dict['update'])
+            df_update = pd.read_csv(paths['update'])
             df_update['technology'] = tech
             df_update['scale'] = scale
-            df_update['update_query'] = df_update['query']  # update query itself
+            df_update['query_type'] = 'update'
 
             # Load read queries
-            df_read = pd.read_csv(file_dict['read'])
+            df_read = pd.read_csv(paths['read'])
             df_read['technology'] = tech
             df_read['scale'] = scale
-            df_read['update_query'] = df_read['wquery']  # associated update query
+            df_read['query_type'] = 'read'
 
-            # Combine update + read
-            df_combined = pd.concat([df_update, df_read], ignore_index=True)
-            dfs.append(df_combined[['scale', 'technology', 'query', 'update_query', 'exec_time']])
-    combined_df = pd.concat(dfs, ignore_index=True)
-    return combined_df
-
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-def plot_grouped_bar(df_scale, scale):
-    # Count the number of update queries to adjust figure width
-    num_updates = df_scale['update_query'].nunique()
-    plt.figure(figsize=(max(12, num_updates * 1.5), 6))
-
-    # Create grouped bar plot
-    ax = sns.barplot(
-        data=df_scale,
-        x='update_query',
-        y='exec_time',
-        hue='query',
-        ci=None,
-        dodge=True,
-        width=0.7
-    )
-
-    # Rotate x-ticks for readability
-    plt.xticks(rotation=45, ha='right')
-
-    # Annotate bars with read query names on top of read query bars
-    for p in ax.patches:
-        height = p.get_height()
-        x = p.get_x() + p.get_width() / 2
-        label = p.get_label()
-        # Only annotate read queries
-        if 'read' in label.lower():
-            ax.text(
-                x=x, 
-                y=height + 0.05*height, 
-                s=label, 
-                ha='center', 
-                va='bottom', 
-                fontsize=8,
-                rotation=45
+            # Merge read queries with their associated update queries using wquery
+            df_read = df_read.merge(
+                df_update[['query', 'exec_time']],
+                left_on='wquery',
+                right_on='query',
+                suffixes=('_read', '_update')
             )
 
-    plt.title(f"Grouped Bar Plot for Scale {scale}")
-    plt.xlabel("Update Queries")
+            # Keep relevant columns and rename
+            df_read = df_read.rename(columns={
+                'query_read': 'query',
+                'exec_time_read': 'exec_time',
+                'query_update': 'update_query',
+                'exec_time_update': 'update_exec_time'
+            })
+
+            # Append both update and read queries to combined DataFrame
+            all_data.append(df_update)
+            all_data.append(df_read)
+
+    combined_df = pd.concat(all_data, ignore_index=True)
+    return combined_df
+
+
+def plot_grouped_bar(df, scale):
+    df_scale = df[df['scale'] == scale]
+    technologies = df_scale['technology'].unique()
+
+    plt.figure(figsize=(16, 6))
+
+    for i, tech in enumerate(technologies):
+        df_tech = df_scale[df_scale['technology'] == tech]
+
+        # Get unique update queries
+        update_queries = df_tech[df_tech['query_type'] == 'update']['query'].unique()
+        positions = np.arange(len(update_queries)) * (len(technologies) * 1.5) + i * 1.5  # spacing between techs
+
+        for j, u_query in enumerate(update_queries):
+            # Plot the update query bar
+            u_exec_time = df_tech[(df_tech['query'] == u_query) & (df_tech['query_type'] == 'update')]['exec_time'].values[0]
+            plt.bar(positions[j], u_exec_time, width=0.4, label=f'{tech} update' if j == 0 else "", color='C0')
+
+            # Plot associated read queries next to the update bar
+            reads = df_tech[(df_tech['update_query'] == u_query) & (df_tech['query_type'] == 'read')]
+            for k, (_, row) in enumerate(reads.iterrows()):
+                plt.bar(positions[j] + 0.4 + 0.2*k, row['exec_time'], width=0.2, label=f'{tech} read' if j == 0 and k == 0 else "", color='C1')
+                # Add query name on top
+                plt.text(positions[j] + 0.4 + 0.2*k, row['exec_time'] + 0.05*row['exec_time'], row['query'], rotation=90, ha='center', va='bottom', fontsize=8)
+
+            # Add update query name on top
+            plt.text(positions[j], u_exec_time + 0.05*u_exec_time, u_query, rotation=90, ha='center', va='bottom', fontsize=8)
+
     plt.ylabel("Execution Time (s)")
-    plt.legend(title="Query")
+    plt.title(f"Update and Read Queries Execution Time - {scale}")
+    plt.xticks([])
+    plt.legend()
     plt.tight_layout()
     plt.show()
 
+
 # Example usage
-combined_df = load_and_prepare(files)
-plot_grouped_bars(combined_df)
+files = {
+    "10GB": {
+        "blms": {"update": "blms_update_10GB.csv", "read": "blms_read_10GB.csv"},
+        "bqms": {"update": "bqms_update_10GB.csv", "read": "bqms_read_10GB.csv"},
+        "bqmn": {"update": "bqmn_update_10GB.csv", "read": "bqmn_read_10GB.csv"},
+    }
+}
+
+df_all = load_and_prepare(files)
+plot_grouped_bar(df_all, "10GB")
