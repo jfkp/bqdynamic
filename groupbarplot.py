@@ -47,33 +47,41 @@ def plot_grouped_bar(df, scale):
     df_scale = df[df['scale'] == scale]
     technologies = df_scale['technology'].unique()
 
+    colors = {'blms': 'C0', 'bqms': 'C1', 'bqmn': 'C2'}  # Color per technology
+    max_reads = df_scale.groupby('update_query').size().max()
+    bar_width = 0.4 / (max_reads + 1)  # dynamically adjust width
+
     plt.figure(figsize=(16, 6))
 
-    for i, tech in enumerate(technologies):
+    group_positions = []
+    group_labels = []
+
+    pos = 0
+    for tech in technologies:
         df_tech = df_scale[df_scale['technology'] == tech]
-
-        # Get unique update queries
         update_queries = df_tech[df_tech['query_type'] == 'update']['query'].unique()
-        positions = np.arange(len(update_queries)) * (len(technologies) * 1.5) + i * 1.5  # spacing between techs
 
-        for j, u_query in enumerate(update_queries):
-            # Plot the update query bar
+        for u_query in update_queries:
+            # Update query bar
             u_exec_time = df_tech[(df_tech['query'] == u_query) & (df_tech['query_type'] == 'update')]['exec_time'].values[0]
-            plt.bar(positions[j], u_exec_time, width=0.4, label=f'{tech} update' if j == 0 else "", color='C0')
+            plt.bar(pos, u_exec_time, width=bar_width, color=colors[tech], label=f'{tech} update' if pos == 0 else "")
+            plt.text(pos, u_exec_time + 0.02*u_exec_time, u_query, rotation=90, ha='center', va='bottom', fontsize=8)
 
-            # Plot associated read queries next to the update bar
+            # Read queries
             reads = df_tech[(df_tech['update_query'] == u_query) & (df_tech['query_type'] == 'read')]
-            for k, (_, row) in enumerate(reads.iterrows()):
-                plt.bar(positions[j] + 0.4 + 0.2*k, row['exec_time'], width=0.2, label=f'{tech} read' if j == 0 and k == 0 else "", color='C1')
-                # Add query name on top
-                plt.text(positions[j] + 0.4 + 0.2*k, row['exec_time'] + 0.05*row['exec_time'], row['query'], rotation=90, ha='center', va='bottom', fontsize=8)
+            for i, (_, row) in enumerate(reads.iterrows()):
+                read_pos = pos + bar_width*(i+1)
+                plt.bar(read_pos, row['exec_time'], width=bar_width, color=colors[tech], alpha=0.7,
+                        label=f'{tech} read' if pos == 0 and i == 0 else "")
+                plt.text(read_pos, row['exec_time'] + 0.02*row['exec_time'], row['query'], rotation=90, ha='center', va='bottom', fontsize=8)
 
-            # Add update query name on top
-            plt.text(positions[j], u_exec_time + 0.05*u_exec_time, u_query, rotation=90, ha='center', va='bottom', fontsize=8)
+            group_positions.append(pos + bar_width*(len(reads)/2))
+            group_labels.append(u_query)
+            pos += bar_width*(len(reads)+2)  # space to next group
 
     plt.ylabel("Execution Time (s)")
     plt.title(f"Update and Read Queries Execution Time - {scale}")
-    plt.xticks([])
+    plt.xticks(group_positions, group_labels, rotation=45, ha='right')
     plt.legend()
     plt.tight_layout()
     plt.show()
