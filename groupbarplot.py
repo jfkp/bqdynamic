@@ -2,6 +2,48 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+def plot_grouped_bar_all_tech(df, scale):
+    df_scale = df[df['scale'] == scale]
+    technologies = df_scale['technology'].unique()
+
+    colors = {'blms': 'C0', 'bqms': 'C1', 'bqmn': 'C2'}
+    max_reads = df_scale.groupby(['update_query', 'technology']).size().max()
+    n_tech = len(technologies)
+    bar_width = 0.2  # fixed width for each technology
+
+    plt.figure(figsize=(16, 6))
+
+    # Get all unique update queries across all technologies
+    update_queries = df_scale['update_query'].dropna().unique()
+    group_positions = np.arange(len(update_queries))
+
+    for i, tech in enumerate(technologies):
+        df_tech = df_scale[df_scale['technology'] == tech]
+
+        for j, u_query in enumerate(update_queries):
+            # Update query bar
+            u_exec_time_row = df_tech[(df_tech['query'] == u_query) & (df_tech['query_type'] == 'update')]
+            if not u_exec_time_row.empty:
+                u_exec_time = u_exec_time_row['exec_time'].values[0]
+                plt.bar(j + i*bar_width, u_exec_time, width=bar_width, color=colors[tech], label=f'{tech} update' if j==0 else "")
+                plt.text(j + i*bar_width, u_exec_time + 0.02*u_exec_time, u_query, rotation=90, ha='center', va='bottom', fontsize=8)
+
+            # Read queries associated with this update
+            reads = df_tech[(df_tech['update_query'] == u_query) & (df_tech['query_type'] == 'read')]
+            for k, (_, row) in enumerate(reads.iterrows()):
+                read_pos = j + i*bar_width + (k+1)*0.03  # small shift for multiple reads
+                plt.bar(read_pos, row['exec_time'], width=bar_width, color=colors[tech], alpha=0.7, 
+                        label=f'{tech} read' if j==0 and k==0 else "")
+                plt.text(read_pos, row['exec_time'] + 0.02*row['exec_time'], row['query'], rotation=90, ha='center', va='bottom', fontsize=8)
+
+    plt.ylabel("Execution Time (s)")
+    plt.title(f"Update and Read Queries Execution Time - {scale}")
+    plt.xticks(group_positions + bar_width*(n_tech-1)/2, update_queries, rotation=45, ha='right')
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+
 def load_and_prepare(files):
     all_data = []
 
