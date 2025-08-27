@@ -5,6 +5,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy as np
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 def plot_per_update_query(df, scale):
     df_scale = df[df['scale'] == scale]
     technologies = df_scale['technology'].unique()
@@ -30,7 +33,7 @@ def plot_per_update_query(df, scale):
             u_exec_row = df_tech[(df_tech['query'] == u_query) & (df_tech['query_type'] == 'update')]
             if not u_exec_row.empty:
                 exec_time = u_exec_row['exec_time'].values[0]
-                ax.bar(pos, exec_time, color=colors[tech], width=0.4, label=f'{tech} update')
+                ax.bar(pos, exec_time, color=colors[tech], width=0.4)
                 ax.text(pos, exec_time + 0.02*exec_time, u_query, rotation=90, ha='center', va='bottom', fontsize=8)
                 x_positions.append(pos)
                 heights.append(exec_time)
@@ -40,7 +43,7 @@ def plot_per_update_query(df, scale):
             # Plot read queries associated with this update
             reads = df_tech[(df_tech['update_query'] == u_query) & (df_tech['query_type'] == 'read')]
             for _, row in reads.iterrows():
-                ax.bar(pos, row['exec_time'], color=colors[tech], width=0.4, alpha=0.7, label=f'{tech} read')
+                ax.bar(pos, row['exec_time'], color=colors[tech], width=0.4, alpha=0.7)
                 ax.text(pos, row['exec_time'] + 0.02*row['exec_time'], row['query'], rotation=90, ha='center', va='bottom', fontsize=8)
                 x_positions.append(pos)
                 heights.append(row['exec_time'])
@@ -51,11 +54,13 @@ def plot_per_update_query(df, scale):
         ax.set_title(f"Update Query: {u_query} - Scale {scale}")
         ax.set_xticks(x_positions)
         ax.set_xticklabels(labels, rotation=45, ha='right')
-        ax.legend()
 
-    plt.tight_layout()
+    # Add one legend at the top
+    legend_labels = [plt.Rectangle((0,0),1,1, color=colors[tech]) for tech in technologies]
+    fig.legend(legend_labels, technologies, loc='upper center', ncol=len(technologies), fontsize=10)
+    
+    plt.tight_layout(rect=[0,0,1,0.95])  # leave space for legend
     plt.show()
-
 
 def plot_grouped_bar_all_tech(df, scale):
     df_scale = df[df['scale'] == scale]
