@@ -37,12 +37,27 @@ def load_data(files):
     return df_all
 
 # Prepare data for plotting
-def prepare_plot_data(df):
-    df_plot = df.copy()
-    # Convert scale to numeric for x-axis ordering
-    scale_order = sorted(df['scale'].unique(), key=lambda x: int(x.replace('GB','')))
-    df_plot['scale_num'] = df_plot['scale'].apply(lambda x: scale_order.index(x))
-    return df_plot, scale_order
+def prepare_plot_data(files, tech_list):
+    all_data = []
+
+    for scale, tech_files in files.items():
+        scale_num = int(scale.replace("GB", ""))  # Fix here
+        for tech in tech_list:
+            # Load update CSV
+            df_update = pd.read_csv(tech_files[tech]['update'])
+            df_update['technology'] = tech
+            df_update['scale'] = scale_num
+
+            # Load read CSV
+            df_read = pd.read_csv(tech_files[tech]['read'])
+            df_read['technology'] = tech
+            df_read['scale'] = scale_num
+
+            # Merge update + read
+            df_update_read = pd.concat([df_update, df_read], ignore_index=True)
+            all_data.append(df_update_read)
+
+    return pd.concat(all_data, ignore_index=True)
 
 # Plot function
 def plot_exec_times(df_plot, scale_order):
