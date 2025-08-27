@@ -29,45 +29,35 @@ def load_and_prepare(files):
     return pd.concat(all_data, ignore_index=True)
 
 
+def plot_grouped_exec_times(df, scale):
+    # Filter the scale
+    df_scale = df[df['scale'] == scale].copy()
 
-def plot_exec_times(df, scale):
-    # Filter for the scale
-    df_scale = df[df['scale'] == scale]
+    # Create a new column for proper sorting: update_query + query name
+    df_scale['sort_key'] = df_scale['update_query'].astype(str) + "_" + df_scale['query'].astype(str)
+    df_scale = df_scale.sort_values(by='sort_key')
 
-    # Set plot style
-    sns.set(style="whitegrid")
-    
-    # Create a grouped bar plot
+    # Set x-axis order
+    x_order = df_scale['query'].tolist()
+
+    # Plot
     plt.figure(figsize=(15, 6))
-    ax = sns.barplot(
+    sns.barplot(
         data=df_scale,
-        x='query',           # each query name
+        x='query',
         y='exec_time',
-        hue='technology',    # tech differences in color
-        dodge=True
+        hue='technology',
+        order=x_order
     )
 
-    # Add update_query as a label grouping separator
-    query_positions = range(len(df_scale['query'].unique()))
-    update_queries = df_scale['update_query'].unique()
-    
-    # Draw vertical lines to separate groups
-    last_pos = -0.5
-    for uq in update_queries:
-        n_queries = len(df_scale[df_scale['update_query'] == uq]['query'].unique())
-        plt.axvline(x=last_pos + n_queries, color='grey', linestyle='--', alpha=0.5)
-        last_pos += n_queries
-
-    # Labels and title
-    plt.xlabel("Query (reads labeled by their own name)")
+    plt.xlabel("Queries (reads labeled by their name)")
     plt.ylabel("Execution Time (s)")
     plt.title(f"Execution Times for Scale {scale}")
-    plt.xticks(rotation=45, ha="right")
+    plt.xticks(rotation=45, ha='right')
     plt.legend(title="Technology")
     plt.tight_layout()
     plt.show()
 
-plt.show()
 
 # --- Prepare data ---
 all_data = load_and_prepare(files)
