@@ -2,6 +2,11 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+
 def plot_exec_time_vs_scale_annotated(files_dict):
     all_data = []
 
@@ -33,7 +38,7 @@ def plot_exec_time_vs_scale_annotated(files_dict):
     sns.set(style="whitegrid")
 
     # Plot lines for update and read queries
-    lineplot = sns.lineplot(
+    sns.lineplot(
         data=df_all,
         x='scale',
         y='exec_time',
@@ -44,17 +49,23 @@ def plot_exec_time_vs_scale_annotated(files_dict):
         ci=None
     )
 
-    # Annotate read queries
+    # Annotate read queries with jitter and vertical offset
     read_queries = df_all[df_all['query_type'] == 'read']
-    for i, row in read_queries.iterrows():
-        lineplot.text(
-            x=row['scale'],
-            y=row['exec_time'] + 0.5,  # slightly above the point
-            s=row['query_name'],
-            horizontalalignment='center',
-            fontsize=8,
-            rotation=45
-        )
+    scales = list(df_all['scale'].unique())
+    scale_jitter = {s: np.linspace(-0.1, 0.1, len(read_queries[read_queries['scale']==s])) for s in scales}
+
+    for scale in scales:
+        queries_in_scale = read_queries[read_queries['scale'] == scale]
+        for i, (_, row) in enumerate(queries_in_scale.iterrows()):
+            jitter = scale_jitter[scale][i]
+            plt.text(
+                x=row['scale'] + jitter,
+                y=row['exec_time'] + 0.5 + i*0.5,  # stagger vertically
+                s=row['query_name'],
+                horizontalalignment='center',
+                fontsize=8,
+                rotation=45
+            )
 
     plt.title("Execution Time vs Scale for Update and Read Queries")
     plt.ylabel("Execution Time (s)")
@@ -64,6 +75,9 @@ def plot_exec_time_vs_scale_annotated(files_dict):
     plt.show()
 
     return df_all
+
+# Example usage:
+df_all = plot_exec_time_vs_scale_annotated(files)
 
 # Example usage:
 df_all = plot_exec_time_vs_scale_annotated(files)
