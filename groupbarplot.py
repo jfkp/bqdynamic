@@ -2,6 +2,50 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
+def plot_grouped_bars_with_labels(df):
+    sns.set(style="whitegrid")
+    scales = df['scale'].unique()
+    
+    for scale in scales:
+        plt.figure(figsize=(12, 6))
+        df_scale = df[df['scale'] == scale]
+
+        # Sort for consistent plotting
+        df_scale = df_scale.sort_values(by=['update_query', 'query'])
+
+        # Create grouped barplot
+        ax = sns.barplot(
+            data=df_scale,
+            x='update_query',
+            y='exec_time',
+            hue='query',
+            ci=None
+        )
+
+        # Annotate read query bars
+        for p, query_name, update_query in zip(ax.patches, df_scale['query'], df_scale['update_query']):
+            # Only annotate read queries
+            is_read = query_name != update_query
+            if is_read:
+                height = p.get_height()
+                ax.annotate(
+                    query_name,
+                    (p.get_x() + p.get_width() / 2., height),
+                    ha='center',
+                    va='bottom',
+                    fontsize=8,
+                    rotation=90
+                )
+
+        plt.title(f"Execution Time per Query (Scale: {scale})")
+        plt.ylabel("Execution Time (s)")
+        plt.xlabel("Update Query")
+        plt.xticks(rotation=45)
+        plt.legend(title="Query", bbox_to_anchor=(1.05, 1), loc='upper left')
+        plt.tight_layout()
+        plt.show()
+
 def load_and_prepare(files_dict):
     dfs = []
     for scale, tech_dict in files_dict.items():
