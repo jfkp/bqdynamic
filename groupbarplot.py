@@ -2,6 +2,21 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+def load_and_prepare(files_dict):
+    dfs = []
+    for scale, file in files_dict.items():
+        df = pd.read_csv(file)
+        df['scale'] = scale
+        # unify update_query column
+        if 'wquery' in df.columns:
+            df['update_query'] = df['wquery'].fillna(df['query'])
+        else:
+            df['update_query'] = df['query']
+        dfs.append(df[['scale', 'technology', 'query', 'update_query', 'exec_time']])
+    combined_df = pd.concat(dfs, ignore_index=True)
+    return combined_df
+
+
 def load_and_prepare(files):
     all_data = []
     for scale, techs in files.items():
