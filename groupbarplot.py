@@ -8,6 +8,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy as np
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 def plot_per_update_query(df, scale):
     df_scale = df[df['scale'] == scale]
     technologies = df_scale['technology'].unique()
@@ -21,9 +24,6 @@ def plot_per_update_query(df, scale):
         axes = [axes]  # ensure iterable
 
     for ax, u_query in zip(axes, update_queries):
-        x_positions = []
-        heights = []
-        labels = []
         pos = 0
 
         for tech in technologies:
@@ -35,9 +35,6 @@ def plot_per_update_query(df, scale):
                 exec_time = u_exec_row['exec_time'].values[0]
                 ax.bar(pos, exec_time, color=colors[tech], width=0.4)
                 ax.text(pos, exec_time + 0.02*exec_time, u_query, rotation=90, ha='center', va='bottom', fontsize=8)
-                x_positions.append(pos)
-                heights.append(exec_time)
-                labels.append(f'{tech} update')
                 pos += 0.5
 
             # Plot read queries associated with this update
@@ -45,15 +42,11 @@ def plot_per_update_query(df, scale):
             for _, row in reads.iterrows():
                 ax.bar(pos, row['exec_time'], color=colors[tech], width=0.4, alpha=0.7)
                 ax.text(pos, row['exec_time'] + 0.02*row['exec_time'], row['query'], rotation=90, ha='center', va='bottom', fontsize=8)
-                x_positions.append(pos)
-                heights.append(row['exec_time'])
-                labels.append(f'{tech} read')
                 pos += 0.5
 
         ax.set_ylabel("Exec Time (s)")
         ax.set_title(f"Update Query: {u_query} - Scale {scale}")
-        ax.set_xticks(x_positions)
-        ax.set_xticklabels(labels, rotation=45, ha='right')
+        ax.set_xticks([])  # Remove x-axis labels for clarity
 
     # Add one legend at the top
     legend_labels = [plt.Rectangle((0,0),1,1, color=colors[tech]) for tech in technologies]
