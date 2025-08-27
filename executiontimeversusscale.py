@@ -1,82 +1,84 @@
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
-import numpy as np
 
-def plot_exec_time_vs_scale_annotated(files_dict):
-    all_data = []
+# Example file dictionary
+files = {
+    "10GB": {
+        "blms": {"update": "blms_update_10GB.csv", "read": "blms_read_10GB.csv"},
+        "bqms": {"update": "bqms_update_10GB.csv", "read": "bqms_read_10GB.csv"},
+        "bqmn": {"update": "bqmn_update_10GB.csv", "read": "bqmn_read_10GB.csv"},
+    },
+    "20GB": {
+        "blms": {"update": "blms_update_20GB.csv", "read": "blms_read_20GB.csv"},
+        "bqms": {"update": "bqms_update_20GB.csv", "read": "bqms_read_20GB.csv"},
+        "bqmn": {"update": "bqmn_update_20GB.csv", "read": "bqmn_read_20GB.csv"},
+    },
+}
 
-    for scale, tech_files in files_dict.items():
-        for tech, file_paths in tech_files.items():
-            # Load update and read data
-            df_update = pd.read_csv(file_paths['update'])
-            df_read = pd.read_csv(file_paths['read'])
-
-            # Add metadata
-            df_update['scale'] = scale
+# Load all data into a single dataframe
+def load_data(files):
+    df_list = []
+    for scale, tech_dict in files.items():
+        for tech, paths in tech_dict.items():
+            # Update queries
+            df_update = pd.read_csv(paths['update'])
             df_update['technology'] = tech
+            df_update['scale'] = scale
             df_update['query_type'] = 'update'
-            df_update['query_name'] = df_update['query']
+            df_list.append(df_update)
 
-            df_read['scale'] = scale
+            # Read queries
+            df_read = pd.read_csv(paths['read'])
             df_read['technology'] = tech
+            df_read['scale'] = scale
             df_read['query_type'] = 'read'
-            df_read['query_name'] = df_read['query']
-            df_read['update_query'] = df_read['wquery']
+            df_list.append(df_read)
+    df_all = pd.concat(df_list, ignore_index=True)
+    return df_all
 
-            all_data.append(df_update)
-            all_data.append(df_read)
+# Prepare data for plotting
+def prepare_plot_data(df):
+    df_plot = df.copy()
+    # Convert scale to numeric for x-axis ordering
+    scale_order = sorted(df['scale'].unique(), key=lambda x: int(x.replace('GB','')))
+    df_plot['scale_num'] = df_plot['scale'].apply(lambda x: scale_order.index(x))
+    return df_plot, scale_order
 
-    # Concatenate all data
-    df_all = pd.concat(all_data, ignore_index=True)
-
-    # Map scales to numeric positions for plotting
-    scales = sorted(df_all['scale'].unique())
-    scale_to_num = {s: i for i, s in enumerate(scales)}
-    df_all['scale_num'] = df_all['scale'].map(scale_to_num)
-
+# Plot function
+def plot_exec_times(df_plot, scale_order):
+    colors = {'blms':'#1f77b4', 'bqms':'#ff7f0e', 'bqmn':'#2ca02c'}
     plt.figure(figsize=(14, 7))
-    sns.set(style="whitegrid")
 
-    # Plot lines for update and read queries
-    sns.lineplot(
-        data=df_all,
-        x='scale_num',
-        y='exec_time',
-        hue='technology',
-        style='query_type',
-        markers=True,
-        dashes=False,
-        ci=None
-    )
+    for tech in df_plot['technology'].unique():
+        df_tech = df_plot[df_plot['technology'] == tech]
+        for update_query in df_tech[df_tech['query_type']=='update']['query'].unique():
+            # Filter update query
+            df_update = df_tech[(df_tech['query_type']=='update') & (df_tech['query']==update_query)]
+            plt.plot(df_update['scale_num'], df_update['exec_time'], marker='o', linestyle='-', color=colors[tech], label=f"{tech} - {update_query}")
 
-    # Annotate read queries with jitter and vertical offset
-    read_queries = df_all[df_all['query_type'] == 'read']
-    scale_jitter = {s: np.linspace(-0.1, 0.1, len(read_queries[read_queries['scale_num']==scale_to_num[s]])) for s in scales}
+            # Plot associated read queries for this update
+            df_reads = df_tech[(df_tech['query_type']=='read') & (df_tech['wquery']==update_query)]
+            for _, row in df_reads.iterrows():
+                plt.plot(row['scale_num'], row['exec_time'], marker='s', color=colors[tech])
+                # Label the read query on the left
+                plt.text(
+                    x=row['scale_num'] - 0.15,
+                    y=row['exec_time'],
+                    s=row['query'],
+                    horizontalalignment='right',
+                    fontsize=8
+                )
 
-    for scale in scales:
-        queries_in_scale = read_queries[read_queries['scale_num'] == scale_to_num[scale]]
-        for i, (_, row) in enumerate(queries_in_scale.iterrows()):
-            jitter = scale_jitter[scale][i]
-            plt.text(
-                x=row['scale_num'] + jitter,
-                y=row['exec_time'] + 0.5 + i*0.5,  # stagger vertically
-                s=row['query_name'],
-                horizontalalignment='center',
-                fontsize=8,
-                rotation=45
-            )
-
-    # Set x-ticks to scale labels
-    plt.xticks(ticks=list(scale_to_num.values()), labels=list(scale_to_num.keys()))
-    plt.title("Execution Time vs Scale for Update and Read Queries")
+    plt.xticks(range(len(scale_order)), scale_order)
+    plt.xlabel("Scale")
     plt.ylabel("Execution Time (s)")
-    plt.xlabel("Data Scale")
-    plt.legend(title="Technology / Query Type", bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.title("Execution Time for Update and Read Queries Across Scales")
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=3)
+    plt.grid(axis='y')
     plt.tight_layout()
     plt.show()
 
-    return df_all
-
-# Example usage:
-df_all = plot_exec_time_vs_scale_annotated(files)
+# Main
+df_all = load_data(files)
+df_plot, scale_order = prepare_plot_data(df_all)
+plot_exec_times(df_plot, scale_order)
