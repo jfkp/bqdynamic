@@ -1,10 +1,6 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 import numpy as np
 
 def plot_exec_time_vs_scale_annotated(files_dict):
@@ -34,13 +30,18 @@ def plot_exec_time_vs_scale_annotated(files_dict):
     # Concatenate all data
     df_all = pd.concat(all_data, ignore_index=True)
 
+    # Map scales to numeric positions for plotting
+    scales = sorted(df_all['scale'].unique())
+    scale_to_num = {s: i for i, s in enumerate(scales)}
+    df_all['scale_num'] = df_all['scale'].map(scale_to_num)
+
     plt.figure(figsize=(14, 7))
     sns.set(style="whitegrid")
 
     # Plot lines for update and read queries
     sns.lineplot(
         data=df_all,
-        x='scale',
+        x='scale_num',
         y='exec_time',
         hue='technology',
         style='query_type',
@@ -51,15 +52,14 @@ def plot_exec_time_vs_scale_annotated(files_dict):
 
     # Annotate read queries with jitter and vertical offset
     read_queries = df_all[df_all['query_type'] == 'read']
-    scales = list(df_all['scale'].unique())
-    scale_jitter = {s: np.linspace(-0.1, 0.1, len(read_queries[read_queries['scale']==s])) for s in scales}
+    scale_jitter = {s: np.linspace(-0.1, 0.1, len(read_queries[read_queries['scale_num']==scale_to_num[s]])) for s in scales}
 
     for scale in scales:
-        queries_in_scale = read_queries[read_queries['scale'] == scale]
+        queries_in_scale = read_queries[read_queries['scale_num'] == scale_to_num[scale]]
         for i, (_, row) in enumerate(queries_in_scale.iterrows()):
             jitter = scale_jitter[scale][i]
             plt.text(
-                x=row['scale'] + jitter,
+                x=row['scale_num'] + jitter,
                 y=row['exec_time'] + 0.5 + i*0.5,  # stagger vertically
                 s=row['query_name'],
                 horizontalalignment='center',
@@ -67,6 +67,8 @@ def plot_exec_time_vs_scale_annotated(files_dict):
                 rotation=45
             )
 
+    # Set x-ticks to scale labels
+    plt.xticks(ticks=list(scale_to_num.values()), labels=list(scale_to_num.keys()))
     plt.title("Execution Time vs Scale for Update and Read Queries")
     plt.ylabel("Execution Time (s)")
     plt.xlabel("Data Scale")
@@ -75,9 +77,6 @@ def plot_exec_time_vs_scale_annotated(files_dict):
     plt.show()
 
     return df_all
-
-# Example usage:
-df_all = plot_exec_time_vs_scale_annotated(files)
 
 # Example usage:
 df_all = plot_exec_time_vs_scale_annotated(files)
