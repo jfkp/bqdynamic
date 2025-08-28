@@ -103,28 +103,52 @@ def extract_scale_and_type(table_type):
     return base_type, scale
 
 def classify_query_type(df):
-    """Classify queries as READ or WRITE based on query patterns"""
+    """Classify queries as READ or WRITE based on file type and query patterns"""
     df['query_operation'] = 'READ'  # Default to READ
     
-    # Check for write operations in different columns
-    write_indicators = ['update', 'insert', 'delete', 'merge', 'upsert']
+    print(f"\n🔍 Query Classification Debug Info:")
+    print(f"Total records: {len(df)}")
     
-    # Check in 'query' column if it exists
-    if 'query' in df.columns:
-        for indicator in write_indicators:
-            mask = df['query'].str.contains(indicator, case=False, na=False)
-            df.loc[mask, 'query_operation'] = 'WRITE'
+    # Check available columns
+    available_columns = [col for col in ['query', 'wquery', 'table_type'] if col in df.columns]
+    print(f"Available columns for classification: {available_columns}")
     
-    # Check in 'wquery' column if it exists
-    if 'wquery' in df.columns:
-        for indicator in write_indicators:
-            mask = df['wquery'].str.contains(indicator, case=False, na=False)
-            df.loc[mask, 'query_operation'] = 'WRITE'
-    
-    # Check table_type for update metrics
+    # QUERIES files contain READ operations, UPDATE files contain WRITE operations
     if 'table_type' in df.columns:
+        # Mark all UPDATE files as WRITE operations
         update_mask = df['table_type'].str.contains('UPDATE', case=False, na=False)
         df.loc[update_mask, 'query_operation'] = 'WRITE'
+        
+        # Mark all QUERIES files as READ operations (default is already READ)
+        queries_mask = df['table_type'].str.contains('QUERIES', case=False, na=False)
+        df.loc[queries_mask, 'query_operation'] = 'READ'
+        
+        print(f"File type classification:")
+        print(f"  UPDATE files (WRITE): {update_mask.sum()}")
+        print(f"  QUERIES files (READ): {queries_mask.sum()}")
+    
+    # Show sample data for debugging
+    if 'query' in df.columns:
+        unique_queries = df['query'].dropna().unique()[:10]
+        print(f"Sample query values: {unique_queries}")
+    
+    if 'wquery' in df.columns:
+        unique_wqueries = df['wquery'].dropna().unique()[:10]
+        print(f"Sample wquery values: {unique_wqueries}")
+    
+    # Final classification summary
+    final_read_count = (df['query_operation'] == 'READ').sum()
+    final_write_count = (df['query_operation'] == 'WRITE').sum()
+    
+    print(f"Final Classification Results:")
+    print(f"  READ operations: {final_read_count}")
+    print(f"  WRITE operations: {final_write_count}")
+    
+    # Show breakdown by table_type
+    if 'table_type' in df.columns:
+        classification_breakdown = df.groupby(['table_type', 'query_operation']).size().unstack(fill_value=0)
+        print(f"\nBreakdown by table type:")
+        print(classification_breakdown)
     
     return df
 
@@ -789,33 +813,9 @@ if __name__ == "__main__":
     df = main()
     
     # To run with local files, uncomment and modify:
-
-         #To run with local files, uncomment and modify:
-    local_file_dict = {
-        'BLMS_10G_QUERIES': 'blms_10G_store_sale_denorm_bench_10G_queries_metrics.csv',
-        'BQMS_10G_QUERIES': 'bqms_10G_store_sale_denorm_bench_10G_queries_metrics.csv',
-        'BQMN_10G_QUERIES': 'bqmn_10G_store_sale_denorm_bench_10G_queries_metrics.csv',
-        'BLMS_20G_QUERIES': 'blms_20G_store_sale_denorm_bench_20G_queries_metrics.csv',
-        'BQMS_20G_QUERIES': 'bqms_20G_store_sale_denorm_bench_20G_queries_metrics.csv',
-        'BQMN_20G_QUERIES': 'bqmn_20G_store_sale_denorm_bench_20G_queries_metrics.csv',
-        'BLMS_50G_QUERIES': 'blms_50G_store_sale_denorm_bench_50G_queries_metrics.csv',
-        'BQMS_50G_QUERIES': 'bqms_50G_store_sale_denorm_bench_50G_queries_metrics.csv',
-        'BQMN_50G_QUERIES': 'bqmn_50G_store_sale_denorm_bench_50G_queries_metrics.csv',
-        'BLMS_100G_QUERIES': 'blms_100G_store_sale_denorm_bench_100G_queries_metrics.csv',
-        'BQMS_100G_QUERIES': 'bqms_100G_store_sale_denorm_bench_100G_queries_metrics.csv',
-        'BQMN_100G_QUERIES': 'bqmn_100G_store_sale_denorm_bench_100G_queries_metrics.csv',
-        'BLMS_10G_UPDATES': 'blms_10G_store_sale_denorm_bench_10G_update_metrics.csv',
-        'BQMS_10G_UPDATES': 'bqms_10G_store_sale_denorm_bench_10G_update_metrics.csv',
-        'BQMN_10G_UPDATES': 'bqmn_10G_store_sale_denorm_bench_10G_update_metrics.csv',
-        'BLMS_20G_UPDATES': 'blms_20G_store_sale_denorm_bench_20G_update_metrics.csv',
-        'BQMS_20G_UPDATES': 'bqms_20G_store_sale_denorm_bench_20G_update_metrics.csv',
-        'BQMN_20G_UPDATES': 'bqmn_20G_store_sale_denorm_bench_20G_update_metrics.csv',
-        'BLMS_50G_UPDATES': 'blms_50G_store_sale_denorm_bench_50G_update_metrics.csv',
-        'BQMS_50G_UPDATES': 'bqms_50G_store_sale_denorm_bench_50G_update_metrics.csv',
-        'BQMN_50G_UPDATES': 'bqmn_50G_store_sale_denorm_bench_50G_update_metrics.csv',
-        'BLMS_100G_UPDATES': 'blms_100G_store_sale_denorm_bench_100G_update_metrics.csv',
-        'BQMS_100G_UPDATES': 'bqms_100G_store_sale_denorm_bench_100G_update_metrics.csv',
-        'BQMN_100G_UPDATES': 'bqmn_100G_store_sale_denorm_bench_100G_update_metrics.csv'
-
-    }
-    df = run_with_local_files('/path/to/your/data/directory', local_file_dict)
+    # local_file_dict = {
+    #     'BQMS_20G_QUERIES': 'bqms_20G_queries.csv',
+    #     'BQMN_20G_QUERIES': 'bqmn_20G_queries.csv',
+    #     # ... add your local filenames
+    # }
+    # df = run_with_local_files('/path/to/your/data/directory', local_file_dict)
