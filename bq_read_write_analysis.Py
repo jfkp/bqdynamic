@@ -628,7 +628,6 @@ def plot_update_query_combined_analysis(combined_df: pd.DataFrame, save_plots: b
                         bar = ax.bar(x_pos, exec_time, bar_width, 
                                    color='#ff7f0e', alpha=0.8, 
                                    label='UPDATE' if current_x == 0 and i == 0 else "")
-                        # Add value label
                         ax.text(x_pos, exec_time + exec_time*0.01, f'{exec_time:.2f}s',
                                ha='center', va='bottom', fontsize=8, rotation=90)
                 
@@ -641,8 +640,11 @@ def plot_update_query_combined_analysis(combined_df: pd.DataFrame, save_plots: b
                         bar = ax.bar(x_pos, exec_time, bar_width, 
                                    color='#2ca02c', alpha=0.8,
                                    label='QUERIES' if current_x == 0 and i == 0 and offset == 0 else "")
-                        # Add value label
-                        ax.text(x_pos, exec_time + exec_time*0.01, f'{exec_time:.2f}s',
+                        if 'query' in related_queries.columns:
+                            query_name_short = str(related_queries.iloc[i]['query'])[:6]  # Truncate long names
+                        else:
+                            query_name_short = f'q{i+1}'
+                        ax.text(x_pos, exec_time + exec_time*0.01, query_name_short,
                                ha='center', va='bottom', fontsize=8, rotation=90)
                 
                 # Calculate center position for label
@@ -662,7 +664,7 @@ def plot_update_query_combined_analysis(combined_df: pd.DataFrame, save_plots: b
         
         # Customize the plot
         ax.set_title(f'UPDATE + QUERIES Individual Run Performance - {scale} Scale\n'
-                    f'Individual Execution Times by Technology and Query (Check Caching Effects)', 
+                    f'UPDATE bars show execution times, QUERIES bars show query names', 
                     fontsize=16, fontweight='bold', pad=20)
         ax.set_xlabel('Technology - Query Type (Update count, Query count)', fontsize=12, fontweight='bold')
         ax.set_ylabel('Execution Time (seconds)', fontsize=12, fontweight='bold')
@@ -671,9 +673,8 @@ def plot_update_query_combined_analysis(combined_df: pd.DataFrame, save_plots: b
         ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=11)
         ax.grid(True, alpha=0.3, axis='y')
         
-        # Add note about caching and linking
-        ax.text(0.02, 0.98, 'Note: Individual run times shown to identify caching effects\n'
-                           'Look for decreasing times across runs for the same query\n'
+        ax.text(0.02, 0.98, 'Note: UPDATE bars labeled with execution times, QUERIES bars labeled with query names\n'
+                           'Look for decreasing times across runs for the same query to identify caching\n'
                            'Links UPDATE "query" column with QUERIES "wquery" column', 
                transform=ax.transAxes, fontsize=10, verticalalignment='top',
                bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.7))
