@@ -519,6 +519,7 @@ def plot_update_query_combined_analysis(combined_df: pd.DataFrame, save_plots: b
     """
     Plot combined analysis showing UPDATE operations with their related QUERIES for each technology and scale.
     Shows individual execution times for each run to check caching effects, not averages.
+    Links UPDATE files 'query' column with QUERIES files 'wquery' column.
     """
     
     # Classify queries
@@ -532,17 +533,40 @@ def plot_update_query_combined_analysis(combined_df: pd.DataFrame, save_plots: b
         print("⚠️ Need both UPDATE and QUERIES data for combined analysis")
         return
     
-    if 'wquery' not in df_classified.columns:
-        print("⚠️ 'wquery' column not found in data")
+    if 'query' not in update_data.columns:
+        print("⚠️ 'query' column not found in UPDATE data")
+        return
+        
+    if 'wquery' not in query_data.columns:
+        print("⚠️ 'wquery' column not found in QUERIES data")
         return
     
-    # Filter data with valid wquery values
-    update_data = update_data.dropna(subset=['wquery'])
+    # Filter data with valid linking values
+    update_data = update_data.dropna(subset=['query'])
     query_data = query_data.dropna(subset=['wquery'])
     
     if update_data.empty or query_data.empty:
-        print("⚠️ No valid wquery data found for linking UPDATE and QUERIES")
+        print("⚠️ No valid linking data found")
+        print(f"UPDATE data with 'query': {len(update_data)}")
+        print(f"QUERIES data with 'wquery': {len(query_data)}")
         return
+    
+    # Debug: Show what values we have for linking
+    print(f"UPDATE query values: {sorted(update_data['query'].unique())}")
+    print(f"QUERIES wquery values: {sorted(query_data['wquery'].unique())}")
+    
+    # Find common values for linking
+    update_queries = set(update_data['query'].unique())
+    query_wqueries = set(query_data['wquery'].unique())
+    common_queries = update_queries.intersection(query_wqueries)
+    
+    if not common_queries:
+        print("⚠️ No matching queries found between UPDATE 'query' and QUERIES 'wquery' columns")
+        print(f"UPDATE queries: {update_queries}")
+        print(f"QUERIES wqueries: {query_wqueries}")
+        return
+    
+    print(f"✅ Found {len(common_queries)} matching queries: {sorted(common_queries)}")
     
     # Get unique scales and technologies
     scales = sort_scales(df_classified['scale'].unique())
@@ -568,7 +592,7 @@ def plot_update_query_combined_analysis(combined_df: pd.DataFrame, save_plots: b
                         fontsize=16, fontweight='bold')
             continue
         
-        # Prepare data for plotting - group by technology, wquery, and run
+        # Prepare data for plotting - group by technology and linked queries
         plot_data = []
         x_positions = []
         x_labels = []
@@ -582,22 +606,23 @@ def plot_update_query_combined_analysis(combined_df: pd.DataFrame, save_plots: b
             if tech_updates.empty and tech_queries.empty:
                 continue
             
-            # Get unique wqueries for this technology
-            update_wqueries = set(tech_updates['wquery'].unique()) if not tech_updates.empty else set()
-            query_wqueries = set(tech_queries['wquery'].unique()) if not tech_queries.empty else set()
-            common_wqueries = sorted(update_wqueries | query_wqueries)
+            # Get queries that can be linked for this technology
+            tech_update_queries = set(tech_updates['query'].unique()) if not tech_updates.empty else set()
+            tech_query_wqueries = set(tech_queries['wquery'].unique()) if not tech_queries.empty else set()
+            tech_common_queries = tech_update_queries.intersection(tech_query_wqueries)
             
-            if not common_wqueries:
+            if not tech_common_queries:
                 continue
             
-            for wquery in common_wqueries:
-                # Get update data for this wquery
-                wquery_updates = tech_updates[tech_updates['wquery'] == wquery] if not tech_updates.empty else pd.DataFrame()
-                wquery_queries = tech_queries[tech_queries['wquery'] == wquery] if not tech_queries.empty else pd.DataFrame()
+            for query_name in sorted(tech_common_queries):
+                # Get update data for this query (using 'query' column)
+                query_updates = tech_updates[tech_updates['query'] == query_name] if not tech_updates.empty else pd.DataFrame()
+                # Get queries data for this query (using 'wquery' column)  
+                related_queries = tech_queries[tech_queries['wquery'] == query_name] if not tech_queries.empty else pd.DataFrame()
                 
                 # Plot individual runs for updates
-                if not wquery_updates.empty:
-                    update_times = wquery_updates['exec_time'].tolist()
+                if not query_updates.empty:
+                    update_times = query_updates['exec_time'].tolist()
                     for i, exec_time in enumerate(update_times):
                         x_pos = current_x + i * bar_width
                         bar = ax.bar(x_pos, exec_time, bar_width, 
@@ -607,10 +632,10 @@ def plot_update_query_combined_analysis(combined_df: pd.DataFrame, save_plots: b
                         ax.text(x_pos, exec_time + exec_time*0.01, f'{exec_time:.2f}s',
                                ha='center', va='bottom', fontsize=8, rotation=90)
                 
-                # Plot individual runs for queries  
-                if not wquery_queries.empty:
-                    query_times = wquery_queries['exec_time'].tolist()
-                    offset = len(wquery_updates) if not wquery_updates.empty else 0
+                # Plot individual runs for related queries  
+                if not related_queries.empty:
+                    query_times = related_queries['exec_time'].tolist()
+                    offset = len(query_updates) if not query_updates.empty else 0
                     for i, exec_time in enumerate(query_times):
                         x_pos = current_x + (offset + i) * bar_width
                         bar = ax.bar(x_pos, exec_time, bar_width, 
@@ -621,15 +646,15 @@ def plot_update_query_combined_analysis(combined_df: pd.DataFrame, save_plots: b
                                ha='center', va='bottom', fontsize=8, rotation=90)
                 
                 # Calculate center position for label
-                total_bars = len(wquery_updates) + len(wquery_queries)
+                total_bars = len(query_updates) + len(related_queries)
                 center_x = current_x + (total_bars - 1) * bar_width / 2
                 x_positions.append(center_x)
-                x_labels.append(f'{tech}\n{wquery}\n({len(wquery_updates)}u,{len(wquery_queries)}q)')
+                x_labels.append(f'{tech}\n{query_name}\n({len(query_updates)}u,{len(related_queries)}q)')
                 
                 current_x += total_bars * bar_width + bar_width  # Add spacing between groups
         
         if not x_positions:
-            ax.text(0.5, 0.5, f'No valid data for {scale}', 
+            ax.text(0.5, 0.5, f'No linkable data for {scale}', 
                    ha='center', va='center', transform=ax.transAxes, fontsize=14)
             ax.set_title(f'UPDATE + QUERIES Performance - {scale} Scale', 
                         fontsize=16, fontweight='bold')
@@ -646,9 +671,10 @@ def plot_update_query_combined_analysis(combined_df: pd.DataFrame, save_plots: b
         ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=11)
         ax.grid(True, alpha=0.3, axis='y')
         
-        # Add note about caching
+        # Add note about caching and linking
         ax.text(0.02, 0.98, 'Note: Individual run times shown to identify caching effects\n'
-                           'Look for decreasing times across runs for the same query', 
+                           'Look for decreasing times across runs for the same query\n'
+                           'Links UPDATE "query" column with QUERIES "wquery" column', 
                transform=ax.transAxes, fontsize=10, verticalalignment='top',
                bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.7))
     
