@@ -515,6 +515,154 @@ def plot_wquery_grouped_analysis(combined_df: pd.DataFrame, save_plots: bool = F
     
     plt.show()
 
+def plot_update_query_combined_analysis(combined_df: pd.DataFrame, save_plots: bool = False, output_dir: str = 'plots'):
+    """
+    Plot combined analysis showing UPDATE operations with their related QUERIES for each technology and scale.
+    Shows individual execution times for each run to check caching effects, not averages.
+    """
+    
+    # Classify queries
+    df_classified = classify_query_type(combined_df.copy())
+    
+    # Separate UPDATE and QUERIES data
+    update_data = df_classified[df_classified['query_operation'] == 'WRITE']
+    query_data = df_classified[df_classified['query_operation'] == 'READ']
+    
+    if update_data.empty or query_data.empty:
+        print("⚠️ Need both UPDATE and QUERIES data for combined analysis")
+        return
+    
+    if 'wquery' not in df_classified.columns:
+        print("⚠️ 'wquery' column not found in data")
+        return
+    
+    # Filter data with valid wquery values
+    update_data = update_data.dropna(subset=['wquery'])
+    query_data = query_data.dropna(subset=['wquery'])
+    
+    if update_data.empty or query_data.empty:
+        print("⚠️ No valid wquery data found for linking UPDATE and QUERIES")
+        return
+    
+    # Get unique scales and technologies
+    scales = sort_scales(df_classified['scale'].unique())
+    technologies = sorted(df_classified['base_type'].unique())
+    
+    # Create subplots for each scale
+    n_scales = len(scales)
+    fig, axes = plt.subplots(n_scales, 1, figsize=(24, 10 * n_scales))
+    if n_scales == 1:
+        axes = [axes]
+    
+    for idx, scale in enumerate(scales):
+        ax = axes[idx]
+        
+        # Filter data for current scale
+        scale_updates = update_data[update_data['scale'] == scale]
+        scale_queries = query_data[query_data['scale'] == scale]
+        
+        if scale_updates.empty and scale_queries.empty:
+            ax.text(0.5, 0.5, f'No data available for {scale}', 
+                   ha='center', va='center', transform=ax.transAxes, fontsize=14)
+            ax.set_title(f'UPDATE + QUERIES Performance - {scale} Scale', 
+                        fontsize=16, fontweight='bold')
+            continue
+        
+        # Prepare data for plotting - group by technology, wquery, and run
+        plot_data = []
+        x_positions = []
+        x_labels = []
+        bar_width = 0.15
+        current_x = 0
+        
+        for tech in technologies:
+            tech_updates = scale_updates[scale_updates['base_type'] == tech]
+            tech_queries = scale_queries[scale_queries['base_type'] == tech]
+            
+            if tech_updates.empty and tech_queries.empty:
+                continue
+            
+            # Get unique wqueries for this technology
+            update_wqueries = set(tech_updates['wquery'].unique()) if not tech_updates.empty else set()
+            query_wqueries = set(tech_queries['wquery'].unique()) if not tech_queries.empty else set()
+            common_wqueries = sorted(update_wqueries | query_wqueries)
+            
+            if not common_wqueries:
+                continue
+            
+            for wquery in common_wqueries:
+                # Get update data for this wquery
+                wquery_updates = tech_updates[tech_updates['wquery'] == wquery] if not tech_updates.empty else pd.DataFrame()
+                wquery_queries = tech_queries[tech_queries['wquery'] == wquery] if not tech_queries.empty else pd.DataFrame()
+                
+                # Plot individual runs for updates
+                if not wquery_updates.empty:
+                    update_times = wquery_updates['exec_time'].tolist()
+                    for i, exec_time in enumerate(update_times):
+                        x_pos = current_x + i * bar_width
+                        bar = ax.bar(x_pos, exec_time, bar_width, 
+                                   color='#ff7f0e', alpha=0.8, 
+                                   label='UPDATE' if current_x == 0 and i == 0 else "")
+                        # Add value label
+                        ax.text(x_pos, exec_time + exec_time*0.01, f'{exec_time:.2f}s',
+                               ha='center', va='bottom', fontsize=8, rotation=90)
+                
+                # Plot individual runs for queries  
+                if not wquery_queries.empty:
+                    query_times = wquery_queries['exec_time'].tolist()
+                    offset = len(wquery_updates) if not wquery_updates.empty else 0
+                    for i, exec_time in enumerate(query_times):
+                        x_pos = current_x + (offset + i) * bar_width
+                        bar = ax.bar(x_pos, exec_time, bar_width, 
+                                   color='#2ca02c', alpha=0.8,
+                                   label='QUERIES' if current_x == 0 and i == 0 and offset == 0 else "")
+                        # Add value label
+                        ax.text(x_pos, exec_time + exec_time*0.01, f'{exec_time:.2f}s',
+                               ha='center', va='bottom', fontsize=8, rotation=90)
+                
+                # Calculate center position for label
+                total_bars = len(wquery_updates) + len(wquery_queries)
+                center_x = current_x + (total_bars - 1) * bar_width / 2
+                x_positions.append(center_x)
+                x_labels.append(f'{tech}\n{wquery}\n({len(wquery_updates)}u,{len(wquery_queries)}q)')
+                
+                current_x += total_bars * bar_width + bar_width  # Add spacing between groups
+        
+        if not x_positions:
+            ax.text(0.5, 0.5, f'No valid data for {scale}', 
+                   ha='center', va='center', transform=ax.transAxes, fontsize=14)
+            ax.set_title(f'UPDATE + QUERIES Performance - {scale} Scale', 
+                        fontsize=16, fontweight='bold')
+            continue
+        
+        # Customize the plot
+        ax.set_title(f'UPDATE + QUERIES Individual Run Performance - {scale} Scale\n'
+                    f'Individual Execution Times by Technology and Query (Check Caching Effects)', 
+                    fontsize=16, fontweight='bold', pad=20)
+        ax.set_xlabel('Technology - Query Type (Update count, Query count)', fontsize=12, fontweight='bold')
+        ax.set_ylabel('Execution Time (seconds)', fontsize=12, fontweight='bold')
+        ax.set_xticks(x_positions)
+        ax.set_xticklabels(x_labels, fontsize=9, rotation=45, ha='right')
+        ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=11)
+        ax.grid(True, alpha=0.3, axis='y')
+        
+        # Add note about caching
+        ax.text(0.02, 0.98, 'Note: Individual run times shown to identify caching effects\n'
+                           'Look for decreasing times across runs for the same query', 
+               transform=ax.transAxes, fontsize=10, verticalalignment='top',
+               bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.7))
+    
+    plt.subplots_adjust(right=0.82, left=0.08, top=0.92, bottom=0.20)
+    plt.tight_layout(pad=3.0, w_pad=2.0, h_pad=3.0)
+    
+    if save_plots:
+        os.makedirs(output_dir, exist_ok=True)
+        filename = os.path.join(output_dir, 'update_query_individual_runs.png')
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        print(f"Plot saved: {filename}")
+    
+    plt.show()
+
 def generate_read_write_report(combined_df: pd.DataFrame) -> str:
     """Generate a comprehensive report of read/write performance analysis."""
     
@@ -591,11 +739,12 @@ def generate_plots(combined_df: pd.DataFrame,
         - 'scaling_trends': Read/write scaling trends
         - 'ratio_analysis': Read/write ratio analysis
         - 'wquery_analysis': WQuery grouped analysis
+        - 'update_query_combined': UPDATE + QUERIES combined analysis
     """
     
     if plots_to_generate is None:
         plots_to_generate = ['read_comparison', 'write_comparison', 'scaling_trends', 
-                           'ratio_analysis', 'wquery_analysis']
+                           'ratio_analysis', 'wquery_analysis', 'update_query_combined']
     
     print(f"🎨 Generating {len(plots_to_generate)} plots...")
     
@@ -618,6 +767,10 @@ def generate_plots(combined_df: pd.DataFrame,
     if 'wquery_analysis' in plots_to_generate:
         print("📊 Generating WQuery Analysis...")
         plot_wquery_grouped_analysis(combined_df, save_plots, output_dir)
+    
+    if 'update_query_combined' in plots_to_generate:
+        print("📊 Generating UPDATE + QUERIES Combined Analysis...")
+        plot_update_query_combined_analysis(combined_df, save_plots, output_dir)
     
     print("✅ Plot generation complete!")
 
