@@ -176,6 +176,25 @@ def classify_query_type(df: pd.DataFrame) -> pd.DataFrame:
     
     return df
 
+def sort_scales(scales):
+    """
+    Sort scales in logical order: 10G, 20G, 50G, 100G, etc.
+    
+    Args:
+        scales: List of scale strings
+        
+    Returns:
+        Sorted list of scales
+    """
+    def scale_sort_key(scale):
+        # Extract numeric value from scale (e.g., "10G" -> 10)
+        try:
+            return int(scale.replace('G', ''))
+        except:
+            return float('inf')  # Put unknown scales at the end
+    
+    return sorted(scales, key=scale_sort_key)
+
 def plot_read_operations_comparison(combined_df: pd.DataFrame, save_plots: bool = False, output_dir: str = 'plots'):
     """Plot read operations performance comparison across scales and technologies."""
     
@@ -191,6 +210,9 @@ def plot_read_operations_comparison(combined_df: pd.DataFrame, save_plots: bool 
     
     # Group by scale and base_type, calculate mean execution time
     read_pivot = read_data.groupby(['scale', 'base_type'])['exec_time'].mean().unstack()
+    
+    sorted_scales = sort_scales(read_pivot.index.tolist())
+    read_pivot = read_pivot.reindex(sorted_scales)
     
     # Create the plot
     fig, ax = plt.subplots(figsize=(14, 8))
@@ -235,6 +257,9 @@ def plot_write_operations_comparison(combined_df: pd.DataFrame, save_plots: bool
     
     # Group by scale and base_type, calculate mean execution time
     write_pivot = write_data.groupby(['scale', 'base_type'])['exec_time'].mean().unstack()
+    
+    sorted_scales = sort_scales(write_pivot.index.tolist())
+    write_pivot = write_pivot.reindex(sorted_scales)
     
     # Create the plot
     fig, ax = plt.subplots(figsize=(14, 8))
@@ -283,6 +308,9 @@ def plot_read_write_scaling_trends(combined_df: pd.DataFrame, save_plots: bool =
     # Read operations scaling trends
     if not read_data.empty:
         read_trends = read_data.groupby(['scale', 'base_type'])['exec_time'].mean().unstack()
+        sorted_scales = sort_scales(read_trends.index.tolist())
+        read_trends = read_trends.reindex(sorted_scales)
+        
         for tech in read_trends.columns:
             ax1.plot(read_trends.index, read_trends[tech], marker='o', linewidth=2, 
                     markersize=8, label=tech)
@@ -300,6 +328,9 @@ def plot_read_write_scaling_trends(combined_df: pd.DataFrame, save_plots: bool =
     # Write operations scaling trends
     if not write_data.empty:
         write_trends = write_data.groupby(['scale', 'base_type'])['exec_time'].mean().unstack()
+        sorted_scales = sort_scales(write_trends.index.tolist())
+        write_trends = write_trends.reindex(sorted_scales)
+        
         for tech in write_trends.columns:
             ax2.plot(write_trends.index, write_trends[tech], marker='s', linewidth=2, 
                     markersize=8, label=tech)
@@ -346,11 +377,16 @@ def plot_read_write_ratio_analysis(combined_df: pd.DataFrame, save_plots: bool =
     merged = pd.merge(write_avg, read_avg, on=['scale', 'base_type'], suffixes=('_write', '_read'))
     merged['ratio'] = merged['exec_time_write'] / merged['exec_time_read']
     
+    sorted_scales = sort_scales(merged['scale'].unique())
+    merged['scale'] = pd.Categorical(merged['scale'], categories=sorted_scales, ordered=True)
+    merged = merged.sort_values('scale')
+    
     # Create 2x2 subplot layout
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(20, 16))
     
     # 1. Read Performance
     read_pivot = read_avg.pivot(index='scale', columns='base_type', values='exec_time')
+    read_pivot = read_pivot.reindex(sorted_scales)
     read_pivot.plot(kind='bar', ax=ax1, width=0.8)
     ax1.set_title('READ Operations Performance', fontsize=14, fontweight='bold')
     ax1.set_ylabel('Execution Time (seconds)')
@@ -359,6 +395,7 @@ def plot_read_write_ratio_analysis(combined_df: pd.DataFrame, save_plots: bool =
     
     # 2. Write Performance
     write_pivot = write_avg.pivot(index='scale', columns='base_type', values='exec_time')
+    write_pivot = write_pivot.reindex(sorted_scales)
     write_pivot.plot(kind='bar', ax=ax2, width=0.8, color=['#ff7f0e', '#2ca02c', '#d62728'])
     ax2.set_title('WRITE Operations Performance', fontsize=14, fontweight='bold')
     ax2.set_ylabel('Execution Time (seconds)')
@@ -367,6 +404,7 @@ def plot_read_write_ratio_analysis(combined_df: pd.DataFrame, save_plots: bool =
     
     # 3. Ratio Analysis
     ratio_pivot = merged.pivot(index='scale', columns='base_type', values='ratio')
+    ratio_pivot = ratio_pivot.reindex(sorted_scales)
     ratio_pivot.plot(kind='bar', ax=ax3, width=0.8)
     ax3.axhline(y=1, color='red', linestyle='--', alpha=0.7, label='Equal Performance')
     ax3.set_title('Write vs Read Performance Ratio\n(Values > 1 mean Write is slower)', fontsize=14, fontweight='bold')
@@ -375,11 +413,11 @@ def plot_read_write_ratio_analysis(combined_df: pd.DataFrame, save_plots: bool =
     ax3.grid(True, alpha=0.3)
     
     # 4. Side-by-side comparison
-    x = np.arange(len(merged['scale'].unique()))
+    x = np.arange(len(sorted_scales))
     width = 0.15
     
     for i, tech in enumerate(merged['base_type'].unique()):
-        tech_data = merged[merged['base_type'] == tech]
+        tech_data = merged[merged['base_type'] == tech].sort_values('scale')
         read_vals = tech_data['exec_time_read'].values
         write_vals = tech_data['exec_time_write'].values
         
@@ -390,7 +428,7 @@ def plot_read_write_ratio_analysis(combined_df: pd.DataFrame, save_plots: bool =
     ax4.set_ylabel('Execution Time (seconds)')
     ax4.set_xlabel('Data Scale')
     ax4.set_xticks(x + width)
-    ax4.set_xticklabels(merged['scale'].unique())
+    ax4.set_xticklabels(sorted_scales)
     ax4.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     ax4.grid(True, alpha=0.3)
     
@@ -421,8 +459,8 @@ def plot_wquery_grouped_analysis(combined_df: pd.DataFrame, save_plots: bool = F
         print("⚠️ No wquery data found for plotting")
         return
     
-    # Get unique scales and create subplots
-    scales = sorted(df_wquery['scale'].unique())
+    # Get unique scales and sort them
+    scales = sort_scales(df_wquery['scale'].unique())
     n_scales = len(scales)
     
     if n_scales == 0:
