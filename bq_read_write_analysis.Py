@@ -454,17 +454,18 @@ def plot_wquery_grouped_analysis(combined_df: pd.DataFrame, save_plots: bool = F
                     fontsize=16, fontweight='bold', pad=20)
         ax.set_xlabel('Query Type (wquery)', fontsize=12, fontweight='bold')
         ax.set_ylabel('Average Execution Time (seconds)', fontsize=12, fontweight='bold')
-        ax.legend(title='Technology', bbox_to_anchor=(1.02, 1), loc='upper left')
+        
+        ax.legend(title='Technology', bbox_to_anchor=(1.02, 1), loc='upper left', 
+                 fontsize=10, title_fontsize=11, frameon=True, fancybox=True, shadow=True)
         ax.grid(True, alpha=0.3)
         
-        # Add value labels on bars
+        # Add value labels on bars with smaller font
         for container in ax.containers:
-            ax.bar_label(container, fmt='%.2f', rotation=0, padding=3)
+            ax.bar_label(container, fmt='%.2f', rotation=0, padding=3, fontsize=9)
         
         # Rotate x-axis labels for better readability
         ax.tick_params(axis='x', rotation=45)
     
-    # Adjust layout to prevent overlap
     plt.subplots_adjust(right=0.82, left=0.08, top=0.92, bottom=0.15)
     plt.tight_layout(pad=3.0, w_pad=2.0, h_pad=2.0)
     
