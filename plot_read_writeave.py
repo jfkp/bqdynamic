@@ -9,15 +9,19 @@ def plot_write_performance(df):
     write_df = df[df['operation'] == 'WRITE']
     write_summary = write_df.groupby(['base_type', 'scale', 'query'])['exec_time'].mean().reset_index()
 
-    plt.figure(figsize=(12,6))
+    # Create composite x-axis label
+    write_summary['label'] = write_summary['scale'].astype(str) + "\n" + write_summary['query']
+
+    plt.figure(figsize=(14,6))
     sns.barplot(
         data=write_summary,
-        x='query',
+        x='label',
         y='exec_time',
-        hue='base_type'
+        hue='base_type',
+        ci=None
     )
     plt.title('Write Operation Performance Comparison by Scale and Technology')
-    plt.xlabel('Write Operation')
+    plt.xlabel('Scale and Write Operation')
     plt.ylabel('Average Execution Time (s)')
     plt.legend(title='Base Type')
     plt.xticks(rotation=45)
@@ -32,15 +36,19 @@ def plot_read_performance(df):
     read_df = df[df['operation'] == 'READ']
     read_summary = read_df.groupby(['base_type', 'scale', 'wquery'])['exec_time'].mean().reset_index()
 
-    plt.figure(figsize=(12,6))
+    # Create composite x-axis label
+    read_summary['label'] = read_summary['scale'].astype(str) + "\n" + read_summary['wquery']
+
+    plt.figure(figsize=(14,6))
     sns.barplot(
         data=read_summary,
-        x='wquery',
+        x='label',
         y='exec_time',
-        hue='base_type'
+        hue='base_type',
+        ci=None
     )
     plt.title('Read Operation Performance After Different Writes by Scale and Technology')
-    plt.xlabel('Previous Write Operation (wquery)')
+    plt.xlabel('Scale and Previous Write Operation (wquery)')
     plt.ylabel('Average Execution Time (s)')
     plt.legend(title='Base Type')
     plt.xticks(rotation=45)
