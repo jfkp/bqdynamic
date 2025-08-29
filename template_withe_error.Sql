@@ -23,6 +23,13 @@ SET update_cols = (
   WHERE table_name = CONCAT('store_sale_denorm_bench_', SCALE)
 );
 
+/*
+Q1 description :
+- For December sales of manufacturer 436, which brands sold the most each year?
+Computes the total December sales revenue (ss_ext_sales_price) per brand for manufacturer 436,
+grouped by year, and orders the results by year, descending sales, and brand ID.
+*/
+
 -- q1
 set q1 = """
  SELECT d_year
@@ -36,6 +43,13 @@ set q1 = """
         GROUP BY d_year, i_brand, i_brand_id
         ORDER BY d_year, sum_agg DESC, brand_id     
 """;
+
+/*
+Q2 description :
+high-priced sales concentration by state
+Which states had at least 10 February 2000 sales where the item was sold significantly above its category average price (≥20% higher), and how many such sales per state?
+*/
+
 -- q2 
 SET q2 = '''
     SELECT s.ca_state AS state, COUNT(*) AS cnt
@@ -55,8 +69,16 @@ SET q2 = '''
     ORDER BY cnt, s.ca_state
 ''';
 
+/*
+Q3 description :
+- Demographic-specific item-level sales analysis
+For widowed female customers with primary education who were not targeted by email or event marketing in 1998, 
+what are the average quantity, list price, coupon amount, and actual sales price for each item?”
+*/
 
 -- q3
+
+
 
 SET q3 = '''
     SELECT i_item_id,
@@ -74,6 +96,15 @@ SET q3 = '''
     GROUP BY i_item_id
     ORDER BY i_item_id
 ''';
+
+
+
+/*
+Q4 description :
+Conditional aggregation with dynamic metrics for different sales quantity ranges
+Creates 5 summary buckets based on ss_quantity ranges.
+Each bucket’s value depends on whether the number of sales in that range exceeds a threshold: if yes → average discount, if no → average net profit.
+*/
 
 -- q4
 
@@ -135,6 +166,14 @@ SELECT
     END AS bucket5
 ''';
 
+/*
+Q5 description :
+targeted profitability and sales analysis across different customer segments and regions
+Computes average quantity, sales price, and wholesale cost, plus total wholesale cost for 2001 sales 
+that satisfy specific demographic criteria (marital status, education, household size, price range) 
+and specific location × profit constraints (different thresholds for different states).
+*/
+
 -- q5
 SET q5 = '''
     SELECT 
@@ -175,6 +214,13 @@ SET q5 = '''
       )
 ''';
 
+/*
+Q6 description :
+ranked by total sales descending to see the most lucrative brand/manufacturer combos first
+Computes total November 1999 sales for manager 7’s products, per brand and manufacturer, but only for sales where the customer’s ZIP differs from the store’s ZIP
+
+*/
+
 SET q6 = '''
     SELECT 
         i_brand_id AS brand_id,
@@ -191,6 +237,11 @@ SET q6 = '''
     ORDER BY ext_price DESC, i_brand, i_brand_id, i_manufact_id, i_manufact
 ''';
 
+
+/*
+Q7 description :
+For married female customers with a 4-year degree in 2002, computes item-level and item + state-level average sales metrics.
+*/
 
 SET q7 = '''
     SELECT 
@@ -210,6 +261,14 @@ SET q7 = '''
     GROUP BY ROLLUP(i_item_id, s_state)
     ORDER BY i_item_id, s_state
 ''';
+
+
+/*
+Q8 description :
+quick overview comparisons across multiple sales ranges in a single row
+Produces one row summarizing six distinct quantity-based buckets of sales metrics, 
+using both quantity ranges and optional numeric filters on list price, coupon, or wholesale cost.
+*/
 
 -- q8
 
@@ -277,6 +336,15 @@ FROM (
 ) B6
 ''';
 
+/*
+Q9 description :
+Combines hierarchical aggregation, gross margin calculation, and ranking.
+Computes gross margin for product categories and classes in 1999 across specific states.
+Uses ROLLUP to get multi-level totals (class, category, overall).
+Calculates a rank within each parent grouping to identify which classes or categories have higher/lower gross margins.
+The lochierarchy column identifies the aggregation level, and the RANK() helps compare performance within the hierarchy.
+
+*/
 
 -- q9
 
@@ -315,6 +383,12 @@ SET create_query = (
 );
 
 
+
+/*
+load query description :
+Bulk Insert in append mode into benchmark table
+
+*/
 --  Insert data into the newly created table
 SET load_query = (
   'INSERT INTO blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sale_denorm_bench_' || SCALE || ' (' ||
@@ -323,6 +397,12 @@ SET load_query = (
   'FROM cacib-lsdh-dev-df.blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sales_denorm_start_' || SCALE
 );
 
+
+/*
+merge_insert description :
+update bench table with merge insert  into benchmark table multiple partitions included
+
+*/
 -- merge_insert
 
 SET merge_insert = '''
@@ -335,7 +415,11 @@ SET merge_insert = '''
       INSERT ROW
 ''';
 
+/*
+merge_update description :
+update bench table with merge update benchmark table multiple partitions included
 
+*/
 -- merge_update
 
 SET merge_update = '''
@@ -345,6 +429,12 @@ ON a.ss_sold_date_sk = b.ss_sold_date_sk
    AND a.ss_item_sk = b.ss_item_sk
    AND a.ss_ticket_number = b.ss_ticket_number
 WHEN MATCHED THEN UPDATE SET ''' || update_cols || ' ';
+
+/*
+merge_*delete description :
+update bench table with merge delete with differente size medium,small xsmall and direct delete benchmark table multiple partitions included
+
+*/
 
 SET merge_xdelete = '''
 MERGE INTO blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sale_denorm_bench_''' || SCALE || ''' AS a
