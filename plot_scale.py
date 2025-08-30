@@ -2,7 +2,6 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-import numpy as np
 
 def plot_read_write_scaling_trends(combined_df: pd.DataFrame, save_plots: bool = False, output_dir: str = 'plots'):
     """Plot scaling trends for read and write operations."""
@@ -20,25 +19,32 @@ def plot_read_write_scaling_trends(combined_df: pd.DataFrame, save_plots: bool =
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8), sharey=True)
     
-    # Collect all unique technologies for consistent coloring
-    all_techs = pd.concat([read_data['base_type'], write_data['base_type']]).unique()
-    colors = cm.get_cmap('tab10', len(all_techs))  # tab10 gives distinct colors
+    # Collect ALL unique technologies (union of read & write sets)
+    all_techs = sorted(df_classified['base_type'].unique())
+    colors = cm.get_cmap('tab10', len(all_techs))
     tech_color_map = {tech: colors(i) for i, tech in enumerate(all_techs)}
 
     def plot_trends(ax, data, title, marker):
         if not data.empty:
+            # Group and pivot
             trends = data.groupby(['scale', 'base_type'])['exec_time'].mean().unstack()
+            
+            # Ensure ALL tech columns exist (fill missing with NaN)
+            for tech in all_techs:
+                if tech not in trends.columns:
+                    trends[tech] = float('nan')
+            
+            # Sort scales
             sorted_scales = sort_scales(trends.index.tolist())
             trends = trends.reindex(sorted_scales)
             
-            for tech in trends.columns:
-                series = trends[tech]
-                if series.notna().any():  # avoid plotting empty series
-                    ax.plot(
-                        series.index, series.values,
-                        marker=marker, linewidth=2, markersize=8,
-                        color=tech_color_map[tech], label=tech
-                    )
+            # Plot every technology line, even if partially missing
+            for tech in all_techs:
+                ax.plot(
+                    trends.index, trends[tech],
+                    marker=marker, linewidth=2, markersize=8,
+                    color=tech_color_map[tech], label=tech
+                )
             
             ax.set_title(title, fontsize=14, fontweight='bold')
             ax.set_xlabel('Data Scale', fontsize=12)
