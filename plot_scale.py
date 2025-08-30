@@ -1,3 +1,9 @@
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import numpy as np
+
 def plot_read_write_scaling_trends(combined_df: pd.DataFrame, save_plots: bool = False, output_dir: str = 'plots'):
     """Plot scaling trends for read and write operations."""
     
@@ -12,54 +18,48 @@ def plot_read_write_scaling_trends(combined_df: pd.DataFrame, save_plots: bool =
         print("⚠️ No data found for plotting scaling trends")
         return
     
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8), sharey=True)
     
-    # Read operations scaling trends
-    if not read_data.empty:
-        read_trends = read_data.groupby(['scale', 'base_type'])['exec_time'].mean().unstack()
-        sorted_scales = sort_scales(read_trends.index.tolist())
-        read_trends = read_trends.reindex(sorted_scales)
-        
-        for tech in read_trends.columns:
-            ax1.plot(read_trends.index, read_trends[tech], marker='o', linewidth=2, 
-                    markersize=8, label=tech)
-        
-        ax1.set_title('Read Operations Scaling Trends', fontsize=14, fontweight='bold')
-        ax1.set_xlabel('Data Scale', fontsize=12)
-        ax1.set_ylabel('Average Execution Time (seconds)', fontsize=12)
-        ax1.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-        ax1.grid(True, alpha=0.3)
-    else:
-        ax1.text(0.5, 0.5, 'No Read Data Available', ha='center', va='center', 
-                transform=ax1.transAxes, fontsize=14)
-        ax1.set_title('Read Operations Scaling Trends', fontsize=14, fontweight='bold')
+    # Collect all unique technologies for consistent coloring
+    all_techs = pd.concat([read_data['base_type'], write_data['base_type']]).unique()
+    colors = cm.get_cmap('tab10', len(all_techs))  # tab10 gives distinct colors
+    tech_color_map = {tech: colors(i) for i, tech in enumerate(all_techs)}
+
+    def plot_trends(ax, data, title, marker):
+        if not data.empty:
+            trends = data.groupby(['scale', 'base_type'])['exec_time'].mean().unstack()
+            sorted_scales = sort_scales(trends.index.tolist())
+            trends = trends.reindex(sorted_scales)
+            
+            for tech in trends.columns:
+                series = trends[tech]
+                if series.notna().any():  # avoid plotting empty series
+                    ax.plot(
+                        series.index, series.values,
+                        marker=marker, linewidth=2, markersize=8,
+                        color=tech_color_map[tech], label=tech
+                    )
+            
+            ax.set_title(title, fontsize=14, fontweight='bold')
+            ax.set_xlabel('Data Scale', fontsize=12)
+            ax.set_ylabel('Average Execution Time (seconds)', fontsize=12)
+            ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+            ax.grid(True, alpha=0.3)
+        else:
+            ax.text(0.5, 0.5, f'No {title.split()[0]} Data Available',
+                    ha='center', va='center', transform=ax.transAxes, fontsize=14)
+            ax.set_title(title, fontsize=14, fontweight='bold')
     
-    # Write operations scaling trends
-    if not write_data.empty:
-        write_trends = write_data.groupby(['scale', 'base_type'])['exec_time'].mean().unstack()
-        sorted_scales = sort_scales(write_trends.index.tolist())
-        write_trends = write_trends.reindex(sorted_scales)
-        
-        for tech in write_trends.columns:
-            ax2.plot(write_trends.index, write_trends[tech], marker='s', linewidth=2, 
-                    markersize=8, label=tech)
-        
-        ax2.set_title('Write Operations Scaling Trends', fontsize=14, fontweight='bold')
-        ax2.set_xlabel('Data Scale', fontsize=12)
-        ax2.set_ylabel('Average Execution Time (seconds)', fontsize=12)
-        ax2.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-        ax2.grid(True, alpha=0.3)
-    else:
-        ax2.text(0.5, 0.5, 'No Write Data Available', ha='center', va='center', 
-                transform=ax2.transAxes, fontsize=14)
-        ax2.set_title('Write Operations Scaling Trends', fontsize=14, fontweight='bold')
+    # Plot read & write trends
+    plot_trends(ax1, read_data, 'Read Operations Scaling Trends', marker='o')
+    plot_trends(ax2, write_data, 'Write Operations Scaling Trends', marker='s')
     
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0, 0.85, 1])  # leave room for legends
     
     if save_plots:
         os.makedirs(output_dir, exist_ok=True)
         filename = os.path.join(output_dir, 'read_write_scaling_trends.png')
         plt.savefig(filename, dpi=300, bbox_inches='tight')
-        print(f"Plot saved: {filename}")
+        print(f"✅ Plot saved: {filename}")
     
     plt.show()
