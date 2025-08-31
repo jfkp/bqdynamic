@@ -1,3 +1,24 @@
+df = pd.read_csv(StringIO(data))
+
+# Keep only READ rows
+reads = df[df['operation'] == 'READ']
+
+# Compute average exec_time per (technology, scale, wquery, query)
+summary = reads.groupby(["base_type", "scale", "wquery", "query"])["exec_time"].mean().reset_index()
+
+# Generate grouped bar charts for each technology/scale
+for (base_type, scale), group in summary.groupby(["base_type", "scale"]):
+    pivot = group.pivot(index="query", columns="wquery", values="exec_time")
+    pivot.plot(kind="bar", figsize=(10,6))
+    plt.title(f"Read Performance grouped by wquery ({base_type}, {scale})")
+    plt.ylabel("Average Execution Time (s)")
+    plt.xlabel("Read Query")
+    plt.xticks(rotation=45)
+    plt.legend(title="Write Query (wquery)")
+    plt.tight_layout()
+    plt.show()
+
+
 base_type,scale,operation,exec_time,run_id,query,wquery
 BLMS,10G,READ,4.364005184004782,0.0,q1,merge_insert
 BLMS,10G,READ,2.4169755289913155,1.0,q1,merge_insert
