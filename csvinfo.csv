@@ -1,19 +1,3 @@
-reads = df[df['operation'] == 'READ']
-
-# Plot each technology/scale separately
-for (base_type, scale), group in reads.groupby(["base_type", "scale"]):
-    plt.figure(figsize=(12,6))
-    # Grouped bar: x=read query, color by wquery, y=execution time
-    for wq, sub in group.groupby("wquery"):
-        plt.bar(sub["query"] + "_" + sub["run_id"].astype(str), sub["exec_time"], label=wq)
-    plt.title(f"Read Execution Times grouped by wquery ({base_type}, {scale})")
-    plt.ylabel("Execution Time (s)")
-    plt.xlabel("Read Query (with run_id)")
-    plt.xticks(rotation=45)
-    plt.legend(title="Write Query (wquery)")
-    plt.tight_layout()
-    plt.show()
-
 
 base_type,scale,operation,exec_time,run_id,query,wquery
 BLMS,10G,READ,4.364005184004782,0.0,q1,merge_insert
