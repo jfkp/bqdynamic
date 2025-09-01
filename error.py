@@ -1,3 +1,5 @@
+BQ_CONNECTION = "cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl"
+
 ICEBERG_CATALOG='cacib-lsdh-dev-df'
 ICEBERG_DB='blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb'
 ICEBERG_TABLE_NAME='store_sales_denorm_bench_test'
