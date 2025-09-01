@@ -1,8 +1,37 @@
-  File "/usr/lib/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 185, in deco
-pyspark.errors.exceptions.captured.AnalysisException: [SCHEMA_NOT_FOUND] The schema `cacib-lsdh-dev-df`.`blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb` cannot be found. Verify the spelling and correctness of the schema and catalog.
-If you did not qualify the name with a catalog, verify the current_schema() output, or qualify the name with the correct catalog.
-To tolerate the error on drop use DROP SCHEMA IF EXISTS.
-25/08/31 10:06:28 INFO DataprocSparkPlugin: Shutting down dr
+ICEBERG_CATALOG='cacib-lsdh-dev-df'
+ICEBERG_DB='blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb'
+ICEBERG_TABLE_NAME='store_sales_denorm_bench_test'
+BUCKET = "gs://bkt-lsdh-dev-ew9-bench-bl-lakehouse-ext-tb-00/blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb"
+PROJECT = "cacib-lsdh-dev-df"
+LOCATION = "europe-west9"
+INPUT_BUCKET="gs://bkt-lsdh-dev-ew9-bench-bl-raw-data-f72a/convert/50G/store_sales_denorm_start/*.parquet"
+BQ_DATASET = f"{ICEBERG_CATALOG}.{ICEBERG_DB}"
+BQ_CONNECTION = "cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl"
+options: list[tuple[str]] = [
+        ("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions"),
+        (f"spark.sql.catalog.{ICEBERG_CATALOG}", "org.apache.iceberg.spark.SparkCatalog"),
+        (f"spark.sql.catalog.{ICEBERG_CATALOG}.catalog-impl","org.apache.iceberg.gcp.bigquery.BigQueryMetastoreCatalog"),
+        (f"spark.sql.catalog.{ICEBERG_CATALOG}.gcp_project", PROJECT),
+        (f"spark.sql.catalog.{ICEBERG_CATALOG}.gcp_location", LOCATION),
+        (f"spark.sql.catalog.{ICEBERG_CATALOG}.connection_id", BQ_CONNECTION),
+        (f"spark.sql.catalog.{ICEBERG_CATALOG}.warehouse", BUCKET)
+    ]
+
+# Use the Cloud Storage bucket for temporary BigQuery export data used
+# by the connector.
+
+
+spark_conf = SparkConf() \
+                    .setAppName(value="setup_iceberg") \
+                    .setAll(pairs=options)
+
+spark = SparkSession \
+  .builder\
+  .appName('spark-bigquery-demo') \
+  .enableHiveSupport().config(conf=spark_conf) \
+  .enableHiveSupport()  \
+  .getOrCreate() \
+     
 
 
 
