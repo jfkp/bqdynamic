@@ -1,33 +1,65 @@
-Table info
-Table ID
-cacib-lsdh-dev-df.blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sales_denorm_delete_medium_test
-Created
-Sep 1, 2025, 7:49:52 PM UTC+2
-Last modified
-Sep 1, 2025, 7:49:52 PM UTC+2
-Table expiration
-NEVER
-Data location
-europe-west9
-Default collation
-Default rounding mode
-ROUNDING_MODE_UNSPECIFIED
-Case insensitive
-false
-Description
-Labels
-Primary key(s)
-Tags
-BigQuery table for Apache Iceberg configuration
-Connection ID
-cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl
-Storage URI
-gs://bkt-lsdh-dev-ew9-bench-bl-lakehouse-ext-tb-00/blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb/%s/store_sales_denorm_delete_medium/
-File format
-PARQUET
-Table format
-ICEBERG
-Storage info
-Number of rows
-0
-Current physical bytes
+25/09/01 18:08:34 WARN SparkConf: The configuration key 'spark.yarn.executor.failuresValidityInterval' has been deprecated as of Spark 3.5 and may be removed in the future. Please use the new key 'spark.executor.failuresValidityInterval' instead.
+25/09/01 18:08:34 WARN SparkConf: The configuration key 'spark.yarn.executor.failuresValidityInterval' has been deprecated as of Spark 3.5 and may be removed in the future. Please use the new key 'spark.executor.failuresValidityInterval' instead.
+25/09/01 18:08:34 WARN SparkConf: The configuration key 'spark.yarn.executor.failuresValidityInterval' has been deprecated as of Spark 3.5 and may be removed in the future. Please use the new key 'spark.executor.failuresValidityInterval' instead.
+25/09/01 18:08:35 WARN SparkConf: The configuration key 'spark.yarn.executor.failuresValidityInterval' has been deprecated as of Spark 3.5 and may be removed in the future. Please use the new key 'spark.executor.failuresValidityInterval' instead.
+25/09/01 18:08:36 WARN SparkConf: The configuration key 'spark.yarn.executor.failuresValidityInterval' has been deprecated as of Spark 3.5 and may be removed in the future. Please use the new key 'spark.executor.failuresValidityInterval' instead.
+25/09/01 18:08:37 INFO SparkEnv: Registering MapOutputTracker
+25/09/01 18:08:37 INFO SparkEnv: Registering BlockManagerMaster
+25/09/01 18:08:37 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+25/09/01 18:08:37 INFO SparkEnv: Registering OutputCommitCoordinator
+25/09/01 18:08:38 INFO MetricsConfig: Loaded properties from hadoop-metrics2.properties
+25/09/01 18:08:38 INFO MetricsSystemImpl: Scheduled Metric snapshot period at 10 second(s).
+25/09/01 18:08:38 INFO MetricsSystemImpl: google-hadoop-file-system metrics system started
+25/09/01 18:08:38 INFO DataprocSparkPlugin: Registered 188 driver metrics
+25/09/01 18:08:39 INFO DefaultNoHARMFailoverProxyProvider: Connecting to ResourceManager at dpr-cl-ce-lsdh-dev-ew9-bench-bl-m.europe-west9-b.c.cacib-lsdh-dev-df.internal./172.18.5.6:8032
+25/09/01 18:08:39 INFO AHSProxy: Connecting to Application History server at dpr-cl-ce-lsdh-dev-ew9-bench-bl-m.europe-west9-b.c.cacib-lsdh-dev-df.internal./172.18.5.6:10200
+25/09/01 18:08:40 INFO Configuration: resource-types.xml not found
+25/09/01 18:08:40 INFO ResourceUtils: Unable to find 'resource-types.xml'.
+25/09/01 18:08:41 INFO YarnClientImpl: Submitted application application_1755756127970_0124
+25/09/01 18:08:42 WARN SparkConf: The configuration key 'spark.yarn.executor.failuresValidityInterval' has been deprecated as of Spark 3.5 and may be removed in the future. Please use the new key 'spark.executor.failuresValidityInterval' instead.
+25/09/01 18:08:42 INFO DefaultNoHARMFailoverProxyProvider: Connecting to ResourceManager at dpr-cl-ce-lsdh-dev-ew9-bench-bl-m.europe-west9-b.c.cacib-lsdh-dev-df.internal./172.18.5.6:8030
+25/09/01 18:08:44 INFO GoogleCloudStorageImpl: Ignoring exception of type GoogleJsonResponseException; verified object already exists with desired state.
+25/09/01 18:08:44 INFO GoogleHadoopOutputStream: hflush(): No-op due to rate limit (RateLimiter[stableRate=0.2qps]): readers will *not* yet see flushed data for gs://dataproc-temp-europe-west9-527974666444-ijcootxu/974c06b6-6981-4054-9fb6-a7e372b4cbbf/spark-job-history/application_1755756127970_0124.inprogress [CONTEXT ratelimit_period="1 MINUTES" ]
++-------------+
+|      catalog|
++-------------+
+|spark_catalog|
++-------------+
+
+SLF4J(W): No SLF4J providers were found.
+SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+25/09/01 18:08:51 INFO CatalogUtil: Loading custom FileIO implementation: org.apache.iceberg.hadoop.HadoopFileIO
+25/09/01 18:08:51 WARN SparkConf: The configuration key 'spark.yarn.executor.failuresValidityInterval' has been deprecated as of Spark 3.5 and may be removed in the future. Please use the new key 'spark.executor.failuresValidityInterval' instead.
++--------------------+
+|           namespace|
++--------------------+
+|UT31L3_PowerBI_Tests|
+|blms_ds_lsdh_dev_...|
+|blmt_ds_lsdh_dev_...|
+|bq_ds_lsdh_dev_ew...|
+|bq_ds_lsdh_dev_ew...|
+|bq_ds_lsdh_dev_ew...|
+|bqmn_ds_lsdh_dev_...|
+|bqms_ds_lsdh_dev_...|
+|                 gfd|
+|                 ldt|
+|   pbi_connexion_xls|
++--------------------+
+
+25/09/01 18:09:11 INFO GhfsGlobalStorageStatistics: periodic connector metrics: {action_http_delete_request=3, action_http_delete_request_duration=97, action_http_delete_request_max=36, action_http_delete_request_mean=32, action_http_delete_request_min=30, action_http_post_request=9, action_http_post_request_duration=426, action_http_post_request_max=75, action_http_post_request_mean=47, action_http_post_request_min=29, action_http_put_request=4, action_http_put_request_duration=316, action_http_put_request_max=105, action_http_put_request_mean=79, action_http_put_request_min=57, directories_created=1, files_created=1, gcs_api_client_non_found_response_count=20, gcs_api_client_precondition_failed_response_count=1, gcs_api_client_side_error_count=21, gcs_api_time=2051, gcs_api_total_request_count=46, gcs_connector_time=2350, gcs_get_other_request=3, gcs_list_dir_request=2, gcs_list_dir_request_duration=186, gcs_list_dir_request_max=96, gcs_list_dir_request_mean=93, gcs_list_dir_request_min=90, gcs_list_file_request=3, gcs_list_file_request_duration=278, gcs_list_file_request_max=216, gcs_list_file_request_mean=92, gcs_list_file_request_min=31, gcs_metadata_request=22, gcs_metadata_request_duration=677, gcs_metadata_request_max=216, gcs_metadata_request_mean=30, gcs_metadata_request_min=13, gs_filesystem_create=4, gs_filesystem_initialize=3, op_create=1, op_create_duration=77, op_create_max=77, op_create_mean=77, op_create_min=77, op_get_file_status=2, op_get_file_status_duration=621, op_get_file_status_max=570, op_get_file_status_mean=310, op_get_file_status_min=51, op_get_list_status_result_size=1832, op_glob_status=1, op_hflush=25, op_hflush_duration=897, op_hflush_max=298, op_hflush_mean=35, op_list_status=1, op_list_status_duration=582, op_list_status_max=582, op_list_status_mean=582, op_list_status_min=582, op_mkdirs=1, op_mkdirs_duration=173, op_mkdirs_max=173, op_mkdirs_mean=173, op_mkdirs_min=173, stream_write_bytes=5823992, uptimeSeconds=36}
+[CONTEXT ratelimit_period="5 MINUTES" ]
+25/09/01 18:09:13 WARN SparkStringUtils: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
+Traceback (most recent call last):
+  File "/tmp/job-2b3ab262/testbqstd.py", line 79, in <module>
+    input_df.writeTo(f"`{ICEBERG_CATALOG}`.{ICEBERG_DB}.store_sales_denorm_delete_medium_test").append()
+  File "/usr/lib/spark/python/lib/pyspark.zip/pyspark/sql/readwriter.py", line 2107, in append
+  File "/usr/lib/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+  File "/usr/lib/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 185, in deco
+pyspark.errors.exceptions.captured.AnalysisException: [TABLE_OR_VIEW_NOT_FOUND] The table or view `cacib-lsdh-dev-df`.`blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb`.`store_sales_denorm_delete_medium_test` cannot be found. Verify the spelling and correctness of the schema and catalog.
+If you did not qualify the name with a schema, verify the current_schema() output, or qualify the name with the correct schema and catalog.
+To tolerate the error on drop use DROP VIEW IF EXISTS or DROP TABLE IF EXISTS.;
+'AppendData 'UnresolvedRelation [cacib-lsdh-dev-df, blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb, store_sales_denorm_delete_medium_test], [__required_write_privileges__=INSERT], false, true
++- Relation [ss_sold_time_sk#21L,ss_item_sk#22L,ss_customer_sk#23L,ss_cdemo_sk#24L,ss_hdemo_sk#25L,ss_addr_sk#26L,ss_store_sk#27L,ss_promo_sk#28L,ss_ticket_number#29L,ss_quantity#30L,ss_wholesale_cost#31,ss_list_price#32,ss_sales_price#33,ss_ext_discount_amt#34,ss_ext_sales_price#35,ss_ext_wholesale_cost#36,ss_ext_list_price#37,ss_ext_tax#38,ss_coupon_amt#39,ss_net_paid#40,ss_net_paid_inc_tax#41,ss_net_profit#42,ss_sold_date_sk#43L,d_date_sk#44L,... 152 more fields] parquet
+
+25/09/01 18:09:13 INFO DataprocSparkPlugin: Shutting down driver plugin. metrics=[action_http_patch_request=0, files_created=1, gcs_api_server_timeout_count=0, op_get_list_status_result_size=1832, op_open=0, action_http_delete_request=3, gcs_api_time=2051, gcs_backoff_count=0, gcs_api_client_unauthorized_response_count=0, stream_read_close_operations=0, stream_read_bytes_backwards_on_seek=0, gs_filesystem_create=4, exception_count=0, gcs_exception_count=0, gcs_api_total_request_count=46, op_create=1, stream_read_vectored_operations=0, gcs_metadata_request=22, gcs_api_client_bad_request_count=0, action_http_put_request=4, op_create_non_recursive=0, gcs_api_client_gone_response_count=0, gs_filesystem_initialize=3, stream_read_vectored_incoming_ranges=0, stream_write_operations=0, gcs_list_dir_request=2, stream_read_operations=0, gcs_api_client_request_timeout_count=0, op_rename=0, op_get_file_status=2, op_glob_status=1, op_exists=0, stream_write_bytes=5834688, op_xattr_list=0, op_get_delegation_token=0, gcs_api_server_unavailable_count=0, directories_created=1, files_delete_rejected=0, stream_read_vectored_combined_ranges=0, op_xattr_get_named=0, gcs_list_file_request=3, op_hsync=0, action_http_get_request=0, stream_read_operations_incomplete=0, op_delete=0, stream_read_bytes=0, gcs_api_client_non_found_response_count=20, op_list_located_status=0, gcs_api_client_requested_range_not_statisfiable_count=0, op_hflush=30, op_list_status=1, stream_read_vectored_read_bytes_discarded=0, op_xattr_get_named_map=0, gcs_api_client_side_error_count=21, op_get_file_checksum=0, gcs_api_server_internal_error_count=0, stream_read_seek_bytes_skipped=0, stream_write_close_operations=0, gcs_get_media_request=0, gcs_connector_time=2350, files_deleted=0, action_http_post_request=9, op_mkdirs=1, gcs_api_client_rate_limit_error_count=0, op_copy_from_local_file=0, gcs_api_server_bad_gateway_count=0, stream_readVectored_range_duration=0, stream_read_seek_backward_operations=0, gcs_api_server_side_error_count=0, stream_read_seek_operations=0, gcs_get_other_request=3, stream_read_seek_forward_operations=0, gcs_api_client_precondition_failed_response_count=1, op_xattr_get_map=0, delegation_tokens_issued=0, gcs_backoff_time=0, gcs_list_dir_request_min=90, gcs_metadata_request_min=13, op_delete_min=0, op_glob_status_min=0, op_create_non_recursive_min=0, op_hsync_min=0, op_xattr_get_named_min=0, op_xattr_get_named_map_min=0, op_hflush_min=0, op_xattr_list_min=0, action_http_put_request_min=57, op_open_min=0, gcs_list_file_request_min=31, stream_write_close_operations_min=0, op_create_min=77, action_http_delete_request_min=30, op_mkdirs_min=173, op_list_status_min=582, gcs_get_media_request_min=0, stream_readVectored_range_duration_min=0, stream_read_vectored_operations_min=0, stream_read_close_operations_min=0, stream_read_operations_min=0, stream_read_seek_operations_min=0, op_xattr_get_map_min=0, stream_write_operations_min=0, action_http_patch_request_min=0, op_get_file_status_min=51, op_rename_min=0, delegation_tokens_issued_min=0, action_http_post_request_min=29, stream_read_close_operations_max=0, stream_read_seek_operations_max=0, op_hflush_max=298, op_xattr_list_max=0, op_xattr_get_map_max=0, action_http_put_request_max=105, action_http_patch_request_max=0, action_http_post_request_max=75, stream_write_close_operations_max=0, action_http_delete_request_max=36, op_mkdirs_max=173, gcs_get_media_request_max=0, op_rename_max=0, stream_read_vectored_operations_max=0, stream_readVectored_range_duration_max=0, op_xattr_get_named_map_max=0, stream_write_operations_max=0, stream_read_operations_max=0, op_xattr_get_named_max=0, op_glob_status_max=0, op_create_non_recursive_max=0, op_get_file_status_max=570, op_open_max=0, delegation_tokens_issued_max=0, gcs_list_file_request_max=216, gcs_metadata_request_max=216, op_create_max=77, op_delete_max=0, op_list_status_max=582, op_hsync_max=0, gcs_list_dir_request_max=96, op_open_mean=0, op_xattr_list_mean=0, op_rename_mean=0, op_xattr_get_map_mean=0, gcs_list_dir_request_mean=93, op_glob_status_mean=0, stream_read_seek_operations_mean=0, gcs_list_file_request_mean=92, stream_write_operations_mean=0, op_hflush_mean=29, gcs_metadata_request_mean=30, op_list_status_mean=582, stream_read_close_operations_mean=0, op_xattr_get_named_map_mean=0, stream_read_vectored_operations_mean=0, op_mkdirs_mean=173, action_http_post_request_mean=47, stream_write_close_operations_mean=0, action_http_put_request_mean=79, action_http_patch_request_mean=0, op_hsync_mean=0, delegation_tokens_issued_mean=0, action_http_delete_request_mean=32, stream_read_operations_mean=0, op_create_mean=77, op_delete_mean=0, op_create_non_recursive_mean=0, stream_readVectored_range_duration_mean=0, op_xattr_get_named_mean=0, gcs_get_media_request_mean=0, op_get_file_status_mean=310, op_delete_duration=0, op_get_file_status_duration=621, action_http_put_request_duration=316, stream_write_operations_duration=0, op_hsync_duration=0, gcs_metadata_request_duration=677, gcs_get_media_request_duration=0, gcs_list_file_request_duration=278, op_list_status_duration=582, op_mkdirs_duration=173, op_open_duration=0, op_create_duration=77, op_hflush_duration=897, gcs_list_dir_request_duration=186, op_glob_status_duration=0, stream_read_operations_duration=0, action_http_delete_request_duration=97, action_http_post_request_duration=426, op_rename_duration=0]
