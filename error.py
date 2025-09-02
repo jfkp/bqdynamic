@@ -2,6 +2,11 @@ py4j.protocol.Py4JJavaError: An error occurred while calling o103.parquet.
 : java.util.ServiceConfigurationError: org.apache.spark.sql.sources.DataSourceRegister: Provider com.google.cloud.spark.bigquery.BigQueryRelationProvider could not be instantiated
 	at java.base/java.util.ServiceLoader.fail(ServiceLoader.java:582)
 
+aused by: java.lang.IllegalStateException:  This connector was made for Scala null, it was not meant to run on Scala 2.12
+	at com.google.cloud.spark.bigquery.BigQueryUtilScala$.validateScalaVersionCompatibility(BigQueryUtil.scala:37)
+	at com.google.cloud.spark.bigquery.BigQueryRelationProvider.<init>(BigQueryRelationProvider.scala:42)
+	at com.google.cloud.spark.bigquery.BigQueryRelationProvider.<init>(BigQueryRelationProvider.scala:49)
+
 
 Jar files for job
 gs://bkt-spark-runtime-121f/iceberg-spark-runtime-3.5_2.12-1.9.2.jar
