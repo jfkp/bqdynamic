@@ -1,3 +1,5 @@
+gs://spark-lib/biglake/spark-biglake-iceberg-catalog_2.13-0.1.0-with-dependencies.jar
+
 py4j.protocol.Py4JJavaError: An error occurred while calling o103.parquet.
 : java.util.ServiceConfigurationError: org.apache.spark.sql.sources.DataSourceRegister: Provider com.google.cloud.spark.bigquery.BigQueryRelationProvider could not be instantiated
 	at java.base/java.util.ServiceLoader.fail(ServiceLoader.java:582)
