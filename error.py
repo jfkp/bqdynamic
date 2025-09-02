@@ -2,9 +2,9 @@ Table info
 Table ID
 cacib-lsdh-dev-df.blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb.store_sales_denorm_insert_medium_test
 Created
-Sep 2, 2025, 9:56:56 AM UTC+2
+Sep 2, 2025, 11:26:33 AM UTC+2
 Last modified
-Sep 2, 2025, 9:56:56 AM UTC+2
+Sep 2, 2025, 11:26:33 AM UTC+2
 Table expiration
 NEVER
 Data location
@@ -22,7 +22,7 @@ BigQuery table for Apache Iceberg configuration
 Connection ID
 cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl
 Storage URI
-gs://bkt-lsdh-dev-ew9-bench-bl-lakehouse-ext-tb-00/blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb/store_sales_denorm_insert_medium/
+gs://bkt-lsdh-dev-ew9-bench-bl-lakehouse-ext-tb-00/blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb/store_sales_denorm_insert_medium_test/
 File format
 PARQUET
 Table format
@@ -31,8 +31,7 @@ Storage info
 Number of rows
 74,704
 Current physical bytes
-16.23 MB
-
+0 B
 pyspark.errors.exceptions.captured.AnalysisException: [TABLE_OR_VIEW_NOT_FOUND] The table or view `cacib-lsdh-dev-df`.`blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb`.`store_sales_denorm_insert_medium_test` cannot be found. Verify the spelling and correctness of the schema and catalog.
 If you did not qualify the name with a schema, verify the current_schema() output, or qualify the name with the correct schema and catalog.
 To tolerate the error on drop use DROP VIEW IF EXISTS or DROP TABLE IF EXISTS.; line 2 pos 16;
