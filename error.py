@@ -1,91 +1,44 @@
-from pyspark.sql import SparkSession
-from pyspark import SparkConf
-from pyspark.sql import functions as F
-import os
-import yaml
-from yaml.loader import SafeLoader
-from  pathlib import Path
-from datetime import date
++-------------+
+|      catalog|
++-------------+
+|spark_catalog|
++-------------+
 
+SLF4J(W): No SLF4J providers were found.
+SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+25/09/02 08:06:24 INFO CatalogUtil: Loading custom FileIO implementation: org.apache.iceberg.hadoop.HadoopFileIO
+25/09/02 08:06:24 WARN SparkConf: The configuration key 'spark.yarn.executor.failuresValidityInterval' has been deprecated as of Spark 3.5 and may be removed in the future. Please use the new key 'spark.executor.failuresValidityInterval' instead.
++--------------------+
+|           namespace|
++--------------------+
+|UT31L3_PowerBI_Tests|
+|blms_ds_lsdh_dev_...|
+|blmt_ds_lsdh_dev_...|
+|bq_ds_lsdh_dev_ew...|
+|bq_ds_lsdh_dev_ew...|
+|bq_ds_lsdh_dev_ew...|
+|bqmn_ds_lsdh_dev_...|
+|bqms_ds_lsdh_dev_...|
+|                 gfd|
+|                 ldt|
+|   pbi_connexion_xls|
++--------------------+
 
-ICEBERG_CATALOG='cacib-lsdh-dev-df'
-ICEBERG_DB='blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb'
-ICEBERG_TABLE_NAME='store_sales_denorm_bench_test'
-BUCKET = "gs://bkt-lsdh-dev-ew9-bench-bl-lakehouse-ext-tb-00/blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb"
-PROJECT = "cacib-lsdh-dev-df"
-LOCATION = "europe-west9"
-INPUT_BUCKET="gs://bkt-lsdh-dev-ew9-bench-bl-raw-data-f72a/convert/10G/store_sales_denorm_start/*.parquet"
-BQ_DATASET = f"{ICEBERG_CATALOG}.{ICEBERG_DB}"
-BQ_CONNECTION = "cacib-lsdh-dev-df.europe-west9.bq-co-lsdh-dev-ew9-vai-bench-bl"
-connection_id_short=BQ_CONNECTION.split('.')[2]
-options: list[tuple[str]] = [
-        ("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions"),
-        (f"spark.sql.catalog.{ICEBERG_CATALOG}", "org.apache.iceberg.spark.SparkCatalog"),
-        (f"spark.sql.catalog.{ICEBERG_CATALOG}.catalog-impl","org.apache.iceberg.gcp.bigquery.BigQueryMetastoreCatalog"),
-        (f"spark.sql.catalog.{ICEBERG_CATALOG}.gcp_project", PROJECT),
-        (f"spark.sql.catalog.{ICEBERG_CATALOG}.gcp_location", LOCATION),
-        (f"spark.sql.catalog.{ICEBERG_CATALOG}.connection-id", f"projects/{PROJECT}/locations/{LOCATION}{connection_id_short}"),
-        (f"spark.sql.catalog.{ICEBERG_CATALOG}.warehouse", BUCKET)
-    ]
+25/09/02 08:06:31 WARN SparkStringUtils: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
+Traceback (most recent call last):
+  File "/tmp/job-ea6ad5d0/testbqstd.py", line 81, in <module>
+    spark.sql(f"""
+  File "/usr/lib/spark/python/lib/pyspark.zip/pyspark/sql/session.py", line 1631, in sql
+  File "/usr/lib/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+  File "/usr/lib/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 185, in deco
+pyspark.errors.exceptions.captured.AnalysisException: [TABLE_OR_VIEW_NOT_FOUND] The table or view `cacib-lsdh-dev-df`.`blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb`.`store_sales_denorm_insert_medium_test` cannot be found. Verify the spelling and correctness of the schema and catalog.
+If you did not qualify the name with a schema, verify the current_schema() output, or qualify the name with the correct schema and catalog.
+To tolerate the error on drop use DROP VIEW IF EXISTS or DROP TABLE IF EXISTS.; line 2 pos 22;
+'InsertIntoStatement 'UnresolvedRelation [cacib-lsdh-dev-df, blmt_ds_lsdh_dev_ew9_bench_bl_ib_mg_tb, store_sales_denorm_insert_medium_test], [__required_write_privileges__=INSERT], false, false, false, false
++- Project [ss_sold_time_sk#21L, ss_item_sk#22L, ss_customer_sk#23L, ss_cdemo_sk#24L, ss_hdemo_sk#25L, ss_addr_sk#26L, ss_store_sk#27L, ss_promo_sk#28L, ss_ticket_number#29L, ss_quantity#30L, ss_wholesale_cost#31, ss_list_price#32, ss_sales_price#33, ss_ext_discount_amt#34, ss_ext_sales_price#35, ss_ext_wholesale_cost#36, ss_ext_list_price#37, ss_ext_tax#38, ss_coupon_amt#39, ss_net_paid#40, ss_net_paid_inc_tax#41, ss_net_profit#42, ss_sold_date_sk#43L, d_date_sk#44L, ... 152 more fields]
+   +- SubqueryAlias src_data
+      +- View (`src_data`, [ss_sold_time_sk#21L,ss_item_sk#22L,ss_customer_sk#23L,ss_cdemo_sk#24L,ss_hdemo_sk#25L,ss_addr_sk#26L,ss_store_sk#27L,ss_promo_sk#28L,ss_ticket_number#29L,ss_quantity#30L,ss_wholesale_cost#31,ss_list_price#32,ss_sales_price#33,ss_ext_discount_amt#34,ss_ext_sales_price#35,ss_ext_wholesale_cost#36,ss_ext_list_price#37,ss_ext_tax#38,ss_coupon_amt#39,ss_net_paid#40,ss_net_paid_inc_tax#41,ss_net_profit#42,ss_sold_date_sk#43L,d_date_sk#44L,d_date_id#45,d_date#46,d_month_seq#47L,d_week_seq#48L,d_quarter_seq#49L,d_year#50L,d_dow#51L,d_moy#52L,d_dom#53L,d_qoy#54L,d_fy_year#55L,d_fy_quarter_seq#56L,d_fy_week_seq#57L,d_day_name#58,d_quarter_name#59,d_holiday#60,d_weekend#61,d_following_holiday#62,d_first_dom#63L,d_last_dom#64L,d_same_day_ly#65L,d_same_day_lq#66L,d_current_day#67,d_current_week#68,d_current_month#69,d_current_quarter#70,d_current_year#71,t_time_sk#72L,t_time_id#73,t_time#74L,t_hour#75L,t_minute#76L,t_second#77L,t_am_pm#78,t_shift#79,t_sub_shift#80,t_meal_time#81,c_customer_sk#82L,c_customer_id#83,c_current_cdemo_sk#84L,c_current_hdemo_sk#85L,c_current_addr_sk#86L,c_first_shipto_date_sk#87L,c_first_sales_date_sk#88L,c_salutation#89,c_first_name#90,c_last_name#91,c_preferred_cust_flag#92,c_birth_day#93L,c_birth_month#94L,c_birth_year#95L,c_birth_country#96,c_login#97,c_email_address#98,c_last_review_date#99L,cd_demo_sk#100L,cd_gender#101,cd_marital_status#102,cd_education_status#103,cd_purchase_estimate#104L,cd_credit_rating#105,cd_dep_count#106L,cd_dep_employed_count#107L,cd_dep_college_count#108L,hd_demo_sk#109L,hd_income_band_sk#110L,hd_buy_potential#111,hd_dep_count#112L,hd_vehicle_count#113L,ca_address_sk#114L,ca_address_id#115,ca_street_number#116L,ca_street_name#117,ca_street_type#118,ca_suite_number#119,ca_city#120,ca_county#121,ca_state#122,ca_zip#123L,ca_country#124,ca_gmt_offset#125L,ca_location_type#126,s_store_sk#127L,s_store_id#128,s_rec_start_date#129,s_rec_end_date#130,s_closed_date_sk#131L,s_store_name#132,s_number_employees#133L,s_floor_space#134L,s_hours#135,s_manager#136,s_market_id#137L,s_geography_class#138,s_market_desc#139,s_market_manager#140,s_division_id#141L,s_division_name#142,s_company_id#143L,s_company_name#144,s_street_number#145L,s_street_name#146,s_street_type#147,s_suite_number#148,s_city#149,s_county#150,s_state#151,s_zip#152L,s_country#153,s_gmt_offset#154L,s_tax_precentage#155,p_promo_sk#156L,p_promo_id#157,p_start_date_sk#158L,p_end_date_sk#159L,p_item_sk#160L,p_cost#161,p_response_target#162L,p_promo_name#163,p_channel_dmail#164,p_channel_email#165,p_channel_catalog#166,p_channel_tv#167,p_channel_radio#168,p_channel_press#169,p_channel_event#170,p_channel_demo#171,p_channel_details#172,p_purpose#173,p_discount_active#174,i_item_sk#175L,i_item_id#176,i_rec_start_date#177,i_rec_end_date#178,i_item_desc#179,i_current_price#180,i_wholesale_cost#181,i_brand_id#182L,i_brand#183,i_class_id#184L,i_class#185,i_category_id#186L,i_category#187,i_manufact_id#188L,i_manufact#189,i_size#190,i_formulation#191,i_color#192,i_units#193,i_container#194,i_manager_id#195L,i_product_name#196])
+         +- Relation [ss_sold_time_sk#21L,ss_item_sk#22L,ss_customer_sk#23L,ss_cdemo_sk#24L,ss_hdemo_sk#25L,ss_addr_sk#26L,ss_store_sk#27L,ss_promo_sk#28L,ss_ticket_number#29L,ss_quantity#30L,ss_wholesale_cost#31,ss_list_price#32,ss_sales_price#33,ss_ext_discount_amt#34,ss_ext_sales_price#35,ss_ext_wholesale_cost#36,ss_ext_list_price#37,ss_ext_tax#38,ss_coupon_amt#39,ss_net_paid#40,ss_net_paid_inc_tax#41,ss_net_profit#42,ss_sold_date_sk#43L,d_date_sk#44L,... 152 more fields] parquet
 
-# Use the Cloud Storage bucket for temporary BigQuery export data used
-# by the connector.
-
-
-spark_conf = SparkConf() \
-                    .setAppName(value="setup_iceberg") \
-                    .setAll(pairs=options)
-
-spark = SparkSession \
-  .builder\
-  .appName('spark-bigquery-demo') \
-  .config(conf=spark_conf) \
-  .getOrCreate() \
-      
-spark.conf.set("viewsEnabled","true")
-spark.sql("SHOW CATALOGS").show()
-spark.sql("SHOW DATABASES IN `cacib-lsdh-dev-df`").show()
-
-
-# create_sql_queries=f"""
-#   CREATE TABLE IF NOT EXISTS `{ICEBERG_CATALOG}`.{ICEBERG_DB}.demo_test
-#  (
-#   order_id BIGINT,
-#   customer_id BIGINT,
-#   amount DECIMAL,
-#   order_date DATE
-# )
-# USING iceberg
-# TBLPROPERTIES(
-#   'format-version'='2'
-# ) ;
-# """
-
-
-# TBLPROPERTIES(
-#             'connection_id' = '{BQ_CONNECTION}',
-#             'bq_table' = '{BQ_DATASET}.{ICEBERG_TABLE_NAME}',
-#             'file_format' = 'PARQUET',
-#             'table_format' = 'ICEBERG',
-#             'table_type' = 'MANAGED'
-#             )
-# OPTIONS(
-# 'file_format' = 'PARQUET',
-# 'table_format' = 'ICEBERG',
-
-#  )
-# 'metadata_storage_format' = 'BIGQUERY'
-input_df=spark.read.parquet(INPUT_BUCKET)
-input_df.createOrReplaceTempView("src_data")
-
-spark.sql(f"""
-          INSERT INTO `{ICEBERG_CATALOG}`.{ICEBERG_DB}.store_sales_denorm_delete_medium_test
-          SELECT * from src_data
-          """
-        )
-
-
-# df=spark.sql(create_sql_queries)
-# df.show()
-#df=spark.read.format("bigquery").load(f"select * from `{ICEBERG_CATALOG}`.`{ICEBERG_DB}`.store_sale_denorm_bench_10G")
-#df.write.format("bigquery").option("writeMethod","direct").option("writeAtLeastOnce","true").save(f"{ICEBERG_DB}.store_sale_denorm_bench_11G")
+25/09/02 08:06:32 INFO DataprocSparkPlugin: Shutting down driver plugin. metrics=[action_http_patch_request=0, files_created=1, gcs_api_server_timeout_count=0, op_get_list_status_result_size=92, op_open=0, action_http_delete_request=2, gcs_api_time=1773, gcs_backoff_count=0, gcs_api_client_unauthorized_response_count=0, stream_read_close_operations=0, stream_read_bytes_backwards_on_seek=0, gs_filesystem_create=4, exception_count=0, gcs_exception_count=0, gcs_api_total_request_count=38, op_create=1, stream_read_vectored_operations=0, gcs_metadata_request=19, gcs_api_client_bad_request_count=0, action_http_put_request=3, op_create_non_recursive=0, gcs_api_client_gone_response_count=0, gs_filesystem_initialize=3, stream_read_vectored_incoming_ranges=0, stream_write_operations=0, gcs_list_dir_request=2, stream_read_operations=0, gcs_api_client_request_timeout_count=0, op_rename=0, op_get_file_status=2, op_glob_status=1, op_exists=0, stream_write_bytes=422053, op_xattr_list=0, op_get_delegation_token=0, gcs_api_server_unavailable_count=0, directories_created=1, files_delete_rejected=0, stream_read_vectored_combined_ranges=0, op_xattr_get_named=0, gcs_list_file_request=3, op_hsync=0, action_http_get_request=0, stream_read_operations_incomplete=0, op_delete=0, stream_read_bytes=0, gcs_api_client_non_found_response_count=17, op_list_located_status=0, gcs_api_client_requested_range_not_statisfiable_count=0, op_hflush=28, op_list_status=1, stream_read_vectored_read_bytes_discarded=0, op_xattr_get_named_map=0, gcs_api_client_side_error_count=18, op_get_file_checksum=0, gcs_api_server_internal_error_count=0, stream_read_seek_bytes_skipped=0, stream_write_close_operations=0, gcs_get_media_request=0, gcs_connector_time=1836, files_deleted=0, action_http_post_request=7, op_mkdirs=1, gcs_api_client_rate_limit_error_count=0, op_copy_from_local_file=0, gcs_api_server_bad_gateway_count=0, stream_readVectored_range_duration=0, stream_read_seek_backward_operations=0, gcs_api_server_side_error_count=0, stream_read_seek_operations=0, gcs_get_other_request=2, stream_read_seek_forward_operations=0, gcs_api_client_precondition_failed_response_count=1, op_xattr_get_map=0, delegation_tokens_issued=0, gcs_backoff_time=0, gcs_list_dir_request_min=27, gcs_metadata_request_min=13, op_delete_min=0, op_glob_status_min=0, op_create_non_recursive_min=0, op_hsync_min=0, op_xattr_get_named_min=0, op_xattr_get_named_map_min=0, op_hflush_min=0, op_xattr_list_min=0, action_http_put_request_min=70, op_open_min=0, gcs_list_file_request_min=16, stream_write_close_operations_min=0, op_create_min=93, action_http_delete_request_min=34, op_mkdirs_min=232, op_list_status_min=81, gcs_get_media_request_min=0, stream_readVectored_range_duration_min=0, stream_read_vectored_operations_min=0, stream_read_close_operations_min=0, stream_read_operations_min=0, stream_read_seek_operations_min=0, op_xattr_get_map_min=0, stream_write_operations_min=0, action_http_patch_request_min=0, op_get_file_status_min=57, op_rename_min=0, delegation_tokens_issued_min=0, action_http_post_request_min=30, stream_read_close_operations_max=0, stream_read_seek_operations_max=0, op_hflush_max=265, op_xattr_list_max=0, op_xattr_get_map_max=0, action_http_put_request_max=97, action_http_patch_request_max=0, action_http_post_request_max=74, stream_write_close_operations_max=0, action_http_delete_request_max=35, op_mkdirs_max=232, gcs_get_media_request_max=0, op_rename_max=0, stream_read_vectored_operations_max=0, stream_readVectored_range_duration_max=0, op_xattr_get_named_map_max=0, stream_write_operations_max=0, stream_read_operations_max=0, op_xattr_get_named_max=0, op_glob_status_max=0, op_create_non_recursive_max=0, op_get_file_status_max=680, op_open_max=0, delegation_tokens_issued_max=0, gcs_list_file_request_max=249, gcs_metadata_request_max=251, op_create_max=93, op_delete_max=0, op_list_status_max=81, op_hsync_max=0, gcs_list_dir_request_max=38, op_open_mean=0, op_xattr_list_mean=0, op_rename_mean=0, op_xattr_get_map_mean=0, gcs_list_dir_request_mean=32, op_glob_status_mean=0, stream_read_seek_operations_mean=0, gcs_list_file_request_mean=103, stream_write_operations_mean=0, op_hflush_mean=24, gcs_metadata_request_mean=36, op_list_status_mean=81, stream_read_close_operations_mean=0, op_xattr_get_named_map_mean=0, stream_read_vectored_operations_mean=0, op_mkdirs_mean=232, action_http_post_request_mean=47, stream_write_close_operations_mean=0, action_http_put_request_mean=81, action_http_patch_request_mean=0, op_hsync_mean=0, delegation_tokens_issued_mean=0, action_http_delete_request_mean=34, stream_read_operations_mean=0, op_create_mean=93, op_delete_mean=0, op_create_non_recursive_mean=0, stream_readVectored_range_duration_mean=0, op_xattr_get_named_mean=0, gcs_get_media_request_mean=0, op_get_file_status_mean=368, op_delete_duration=0, op_get_file_status_duration=737, action_http_put_request_duration=244, stream_write_operations_duration=0, op_hsync_duration=0, gcs_metadata_request_duration=684, gcs_get_media_request_duration=0, gcs_list_file_request_duration=309, op_list_status_duration=81, op_mkdirs_duration=232, op_open_duration=0, op_create_duration=93, op_hflush_duration=693, gcs_list_dir_request_duration=65, op_glob_status_duration=0, stream_read_operations_duration=0, action_http_delete_request_duration=69, action_http_post_request_duration=330, op_rename_duration=0]
