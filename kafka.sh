@@ -160,3 +160,8 @@ phase3() {
 # Execute specified function
 # ==============================
 "$@"
+###### how to use the script
+#  ./kafka_script.sh phase1
+#  ./kafka_script.sh phase2
+#  ./kafka_script.sh phase3
+
