@@ -352,16 +352,19 @@ phase3() {
     list_topics
 }
 
+
+usage() {
+    echo "./kafka_script.sh phase1"
+    echo "./kafka_script.sh phase2"
+    echo "./kafka_script.sh phase3"
+    echo "$KAFKA_BASE/run_producer.sh my_topic"
+    echo "$KAFKA_BASE/run_consumer.sh my_topic"
+    echo "./kafka_script.sh cleanup_kafka"
+}
+
 # ==============================
 # Execute requested function
 # ==============================
 "$@"
-
-./kafka_script.sh phase1
-./kafka_script.sh phase2
-./kafka_script.sh phase3
-$KAFKA_BASE/run_producer.sh my_topic
-$KAFKA_BASE/run_consumer.sh my_topic
-./kafka_script.sh cleanup_kafka
 
 
