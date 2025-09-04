@@ -2,11 +2,12 @@ DECLARE DATASET STRING DEFAULT 'bq_ds_lsdh_dev_ew9_bench_bl_std';
 DECLARE SCALE STRING DEFAULT '10G';
 DECLARE REGION STRING DEFAULT 'eu'; -- Added region parameter to specify location
 DECLARE duplicate_count INT64;
+DECLARE sql_query STRING;
 
 -- ===================
 -- 1. Count duplicates dynamically
 -- ===================
-EXECUTE IMMEDIATE FORMAT("""
+SET sql_query = FORMAT("""
   SELECT COUNT(*)
   FROM (
     SELECT ss_sold_date_sk, ss_item_sk, ss_ticket_number, COUNT(*) AS dup_count
@@ -14,9 +15,10 @@ EXECUTE IMMEDIATE FORMAT("""
     GROUP BY ss_sold_date_sk, ss_item_sk, ss_ticket_number
     HAVING COUNT(*) > 1
   )
-""", DATASET, SCALE)
+""", DATASET, SCALE);
+EXECUTE IMMEDIATE sql_query
 INTO duplicate_count
-AT LOCATION '%s'; -- Explicitly specifying the region for the query
+AT LOCATION REGION;
 
 -- ===================
 -- 2. Conditional execution
@@ -24,26 +26,28 @@ AT LOCATION '%s'; -- Explicitly specifying the region for the query
 IF duplicate_count > 0 THEN
 
   -- Step A: Deduplicate rows
-  EXECUTE IMMEDIATE FORMAT("""
+  SET sql_query = FORMAT("""
   CREATE OR REPLACE TABLE `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s`
   OPTIONS(location = '%s') AS
   SELECT ARRAY_AGG(t ORDER BY ss_sold_date_sk LIMIT 1)[OFFSET(0)] AS row_data
   FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s` t
   GROUP BY ss_sold_date_sk, ss_item_sk, ss_ticket_number;
-  """, DATASET, SCALE, REGION, DATASET, SCALE)
-  AT LOCATION '%s'; -- Explicitly specifying the region for the DDL statement
+  """, DATASET, SCALE, REGION, DATASET, SCALE);
+  EXECUTE IMMEDIATE sql_query
+  AT LOCATION REGION;
 
   -- Step B: Flatten row_data back to full column set
-  EXECUTE IMMEDIATE FORMAT("""
+  SET sql_query = FORMAT("""
   CREATE OR REPLACE TABLE `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s`
   OPTIONS(location = '%s') AS
   SELECT row_data.*
   FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s`;
-  """, DATASET, SCALE, REGION, DATASET, SCALE)
-  AT LOCATION '%s'; -- Explicitly specifying the region for the DDL statement
+  """, DATASET, SCALE, REGION, DATASET, SCALE);
+  EXECUTE IMMEDIATE sql_query
+  AT LOCATION REGION;
 
   -- Step C: Create audit table if not exists
-  EXECUTE IMMEDIATE FORMAT("""
+  SET sql_query = FORMAT("""
   CREATE TABLE IF NOT EXISTS `cacib-lsdh-dev-df.%s.dedup_audit_%s` (
       run_timestamp TIMESTAMP,
       dataset STRING,
@@ -53,11 +57,12 @@ IF duplicate_count > 0 THEN
       duplicates_removed INT64
   )
   OPTIONS(location = '%s');
-  """, DATASET, SCALE, REGION)
-  AT LOCATION '%s'; -- Explicitly specifying the region for the DDL statement
+  """, DATASET, SCALE, REGION);
+  EXECUTE IMMEDIATE sql_query
+  AT LOCATION REGION;
 
   -- Step D: Insert audit record
-  EXECUTE IMMEDIATE FORMAT("""
+  SET sql_query = FORMAT("""
   INSERT INTO `cacib-lsdh-dev-df.%s.dedup_audit_%s`
   SELECT
     CURRENT_TIMESTAMP() AS run_timestamp,
@@ -69,8 +74,9 @@ IF duplicate_count > 0 THEN
   FROM
     (SELECT COUNT(*) AS cnt FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s`) orig,
     (SELECT COUNT(*) AS cnt FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s`) dedup;
-  """, DATASET, SCALE, DATASET, SCALE, DATASET, SCALE, DATASET, SCALE)
-  AT LOCATION '%s'; -- Explicitly specifying the region for the DML statement
+  """, DATASET, SCALE, DATASET, SCALE, DATASET, SCALE, DATASET, SCALE);
+  EXECUTE IMMEDIATE sql_query
+  AT LOCATION REGION;
 
 ELSE
   -- ===================
@@ -83,20 +89,22 @@ END IF;
 -- Declare parameters
 DECLARE SCALE STRING DEFAULT '10G';
 DECLARE DATASET STRING DEFAULT 'bq_ds_lsdh_dev_ew9_bench_bl_std';
+DECLARE sql_query STRING;
 
 -- ===================
 -- COUNT start
 -- ===================
-EXECUTE IMMEDIATE FORMAT("""
+SET sql_query = FORMAT("""
 SELECT COUNT(*)
 FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s`;
-""", DATASET, SCALE)
-AT LOCATION '%s'; -- Explicitly specifying the region
+""", DATASET, SCALE);
+EXECUTE IMMEDIATE sql_query
+AT LOCATION REGION;
 
 -- ===================
 -- Insert-medium check (should return 0 rows)
 -- ===================
-EXECUTE IMMEDIATE FORMAT("""
+SET sql_query = FORMAT("""
 SELECT COUNT(*)
 FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_insert_medium_%s` ssi
 WHERE EXISTS (
@@ -106,13 +114,14 @@ WHERE EXISTS (
     AND ssi.ss_item_sk = ssref.ss_item_sk
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
 );
-""", DATASET, SCALE, DATASET, SCALE)
-AT LOCATION '%s'; -- Explicitly specifying the region
+""", DATASET, SCALE, DATASET, SCALE);
+EXECUTE IMMEDIATE sql_query
+AT LOCATION REGION;
 
 -- ===================
 -- Delete using insert-medium
 -- ===================
-EXECUTE IMMEDIATE FORMAT("""
+SET sql_query = FORMAT("""
 DELETE FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s` ssref
 WHERE EXISTS (
   SELECT 1
@@ -121,32 +130,35 @@ WHERE EXISTS (
     AND ssi.ss_item_sk = ssref.ss_item_sk
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
 );
-""", DATASET, SCALE, DATASET, SCALE)
-AT LOCATION '%s'; -- Explicitly specifying the region
+""", DATASET, SCALE, DATASET, SCALE);
+EXECUTE IMMEDIATE sql_query
+AT LOCATION REGION;
 
 -- ===================
 -- Merge delete
 -- ===================
-EXECUTE IMMEDIATE FORMAT("""
+SET sql_query = FORMAT("""
 MERGE INTO `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s` a
 USING `cacib-lsdh-dev-df.%s.store_sales_denorm_insert_medium_%s` b
 ON a.ss_sold_date_sk = b.ss_sold_date_sk
 AND a.ss_item_sk = b.ss_item_sk
 AND a.ss_ticket_number = b.ss_ticket_number
 WHEN MATCHED THEN DELETE;
-""", DATASET, SCALE, DATASET, SCALE)
-AT LOCATION '%s'; -- Explicitly specifying the region
+""", DATASET, SCALE, DATASET, SCALE);
+EXECUTE IMMEDIATE sql_query
+AT LOCATION REGION;
 
 -- ===================
 -- Upsert counts
 -- ===================
-EXECUTE IMMEDIATE FORMAT("""
+SET sql_query = FORMAT("""
 SELECT COUNT(*)
 FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_upsert_%s`;
-""", DATASET, SCALE)
-AT LOCATION '%s'; -- Explicitly specifying the region
+""", DATASET, SCALE);
+EXECUTE IMMEDIATE sql_query
+AT LOCATION REGION;
 
-EXECUTE IMMEDIATE FORMAT("""
+SET sql_query = FORMAT("""
 SELECT COUNT(*)
 FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_upsert_%s` ssi
 WHERE EXISTS (
@@ -156,13 +168,14 @@ WHERE EXISTS (
     AND ssi.ss_item_sk = ssref.ss_item_sk
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
 );
-""", DATASET, SCALE, DATASET, SCALE)
-AT LOCATION '%s'; -- Explicitly specifying the region
+""", DATASET, SCALE, DATASET, SCALE);
+EXECUTE IMMEDIATE sql_query
+AT LOCATION REGION;
 
 -- ===================
 -- Delete xsmall
 -- ===================
-EXECUTE IMMEDIATE FORMAT("""
+SET sql_query = FORMAT("""
 SELECT COUNT(*)
 FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_xsmall_%s` ssi
 WHERE EXISTS (
@@ -172,13 +185,14 @@ WHERE EXISTS (
     AND ssi.ss_item_sk = ssref.ss_item_sk
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
 );
-""", DATASET, SCALE, DATASET, SCALE)
-AT LOCATION '%s'; -- Explicitly specifying the region
+""", DATASET, SCALE, DATASET, SCALE);
+EXECUTE IMMEDIATE sql_query
+AT LOCATION REGION;
 
 -- ===================
 -- Delete small
 -- ===================
-EXECUTE IMMEDIATE FORMAT("""
+SET sql_query = FORMAT("""
 SELECT COUNT(*)
 FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_small_%s` ssi
 WHERE EXISTS (
@@ -188,13 +202,14 @@ WHERE EXISTS (
     AND ssi.ss_item_sk = ssref.ss_item_sk
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
 );
-""", DATASET, SCALE, DATASET, SCALE)
-AT LOCATION '%s'; -- Explicitly specifying the region
+""", DATASET, SCALE, DATASET, SCALE);
+EXECUTE IMMEDIATE sql_query
+AT LOCATION REGION;
 
 -- ===================
 -- Delete medium
 -- ===================
-EXECUTE IMMEDIATE FORMAT("""
+SET sql_query = FORMAT("""
 SELECT COUNT(*)
 FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_medium_%s` ssi
 WHERE EXISTS (
@@ -204,13 +219,14 @@ WHERE EXISTS (
     AND ssi.ss_item_sk = ssref.ss_item_sk
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
 );
-""", DATASET, SCALE, DATASET, SCALE)
-AT LOCATION '%s'; -- Explicitly specifying the region
+""", DATASET, SCALE, DATASET, SCALE);
+EXECUTE IMMEDIATE sql_query
+AT LOCATION REGION;
 
 -- ===================
 -- Intersect delete_small and delete_medium
 -- ===================
-EXECUTE IMMEDIATE FORMAT("""
+SET sql_query = FORMAT("""
 SELECT COUNT(*)
 FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_medium_%s` ssi
 WHERE EXISTS (
@@ -220,5 +236,6 @@ WHERE EXISTS (
     AND ssi.ss_item_sk = ssref.ss_item_sk
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
 );
-""", DATASET, SCALE, DATASET, SCALE)
-AT LOCATION '%s'; -- Explicitly specifying the region
+""", DATASET, SCALE, DATASET, SCALE);
+EXECUTE IMMEDIATE sql_query
+AT LOCATION REGION;
