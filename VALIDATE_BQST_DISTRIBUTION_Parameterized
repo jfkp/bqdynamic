@@ -15,8 +15,8 @@ EXECUTE IMMEDIATE FORMAT("""
     HAVING COUNT(*) > 1
   )
 """, DATASET, SCALE)
-AT LOCATION '%s' -- Explicitly specifying the region for the query
-INTO duplicate_count;
+INTO duplicate_count
+AT LOCATION '%s'; -- Explicitly specifying the region for the query
 
 -- ===================
 -- 2. Conditional execution
