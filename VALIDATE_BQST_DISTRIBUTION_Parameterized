@@ -1,0 +1,77 @@
+-- Query
+SELECT COUNT(*) FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G;
+
+-- query 0 row ok for upsert insert 
+SELECT count(*) FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_insert_medium_10G ssi
+WHERE EXISTS (SELECT 1 
+    FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G ssref
+    WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
+    AND ssi.ss_item_sk = ssref.ss_item_sk
+    AND ssi.ss_ticket_number = ssi.ss_ticket_number
+    );
+
+DELETE FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G ssref
+WHERE EXISTS (
+SELECT 1
+FROM bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_insert_medium_10G ssi
+WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
+AND ssi.ss_item_sk = ssref.ss_item_sk
+AND ssi.ss_ticket_number = ssi.ss_ticket_number
+);
+
+
+MERGE INTO `bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G` AS a
+       USING `bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_insert_medium_10G` AS b
+       ON a.ss_sold_date_sk = b.ss_sold_date_sk
+       AND a.ss_item_sk = b.ss_item_sk
+       AND a.ss_ticket_number = b.ss_ticket_number
+       WHEN MATCHED THEN DELETE;
+   
+-- query 243365 row good for update merge
+SELECT count(*) FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_upsert_10G ;
+SELECT count(*) FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_upsert_10G ssi
+WHERE EXISTS (SELECT 1 
+    FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G ssref
+    WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
+    AND ssi.ss_item_sk = ssref.ss_item_sk
+    AND ssi.ss_ticket_number = ssref.ss_ticket_number
+    );
+
+
+-- query 2421 ok for x_small delete
+SELECT count(*) FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_xsmall_10G ssi
+WHERE EXISTS (SELECT 1 
+    FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G ssref
+    WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
+    AND ssi.ss_item_sk = ssref.ss_item_sk
+    AND ssi.ss_ticket_number = ssref.ss_ticket_number
+    );
+
+
+-- query 25125 row good for small delete
+SELECT count(*) FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_small_10G ssi
+WHERE EXISTS (SELECT 1 
+    FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G ssref
+    WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
+    AND ssi.ss_item_sk = ssref.ss_item_sk
+    AND ssi.ss_ticket_number = ssref.ss_ticket_number
+    );
+
+
+-- query 247274 ok for big delete 
+SELECT count(*) FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_medium_10G ssi
+WHERE EXISTS (SELECT 1 
+    FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G ssref
+    WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
+    AND ssi.ss_item_sk = ssref.ss_item_sk
+    AND ssi.ss_ticket_number = ssref.ss_ticket_number
+    );
+-- query intersect small delete and medium only 2787 row good for the delete
+SELECT count(*) FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_medium_10G ssi
+WHERE EXISTS (SELECT 1 
+    FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_small_10G ssref
+    WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
+    AND ssi.ss_item_sk = ssref.ss_item_sk
+    AND ssi.ss_ticket_number = ssref.ss_ticket_number
+    );
+
