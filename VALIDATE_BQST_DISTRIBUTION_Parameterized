@@ -1,6 +1,12 @@
 -- Query
 SELECT COUNT(*) FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G;
 
+-- check duplicate row
+select ss_sold_date_sk, ss_item_sk, ss_ticket_number,count(*)
+from cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G
+group by ss_sold_date_sk, ss_item_sk, ss_ticket_number
+having count(*) > 1;
+
 -- query 0 row ok for upsert insert 
 SELECT count(*) FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_insert_medium_10G ssi
 WHERE EXISTS (SELECT 1 
