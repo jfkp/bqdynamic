@@ -71,77 +71,135 @@ ELSE
 END IF;
 
 
--- query 0 row ok for upsert insert 
-SELECT count(*) FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_insert_medium_10G ssi
-WHERE EXISTS (SELECT 1 
-    FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G ssref
-    WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
-    AND ssi.ss_item_sk = ssref.ss_item_sk
-    AND ssi.ss_ticket_number = ssi.ss_ticket_number
-    );
+-- Declare parameters
+DECLARE SCALE STRING DEFAULT '10G';
+DECLARE DATASET STRING DEFAULT 'bq_ds_lsdh_dev_ew9_bench_bl_std';
 
-DELETE FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G ssref
+-- ===================
+-- COUNT start
+-- ===================
+EXECUTE IMMEDIATE FORMAT("""
+SELECT COUNT(*) 
+FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s`;
+""", DATASET, SCALE);
+
+-- ===================
+-- Insert-medium check (should return 0 rows)
+-- ===================
+EXECUTE IMMEDIATE FORMAT("""
+SELECT COUNT(*)
+FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_insert_medium_%s` ssi
 WHERE EXISTS (
-SELECT 1
-FROM bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_insert_medium_10G ssi
-WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
-AND ssi.ss_item_sk = ssref.ss_item_sk
-AND ssi.ss_ticket_number = ssi.ss_ticket_number
+  SELECT 1 
+  FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s` ssref
+  WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
+    AND ssi.ss_item_sk = ssref.ss_item_sk
+    AND ssi.ss_ticket_number = ssref.ss_ticket_number
 );
+""", DATASET, SCALE, DATASET, SCALE);
 
-
-MERGE INTO `bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G` AS a
-       USING `bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_insert_medium_10G` AS b
-       ON a.ss_sold_date_sk = b.ss_sold_date_sk
-       AND a.ss_item_sk = b.ss_item_sk
-       AND a.ss_ticket_number = b.ss_ticket_number
-       WHEN MATCHED THEN DELETE;
-   
--- query 243365 row good for update merge
-SELECT count(*) FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_upsert_10G ;
-SELECT count(*) FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_upsert_10G ssi
-WHERE EXISTS (SELECT 1 
-    FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G ssref
-    WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
+-- ===================
+-- Delete using insert-medium
+-- ===================
+EXECUTE IMMEDIATE FORMAT("""
+DELETE FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s` ssref
+WHERE EXISTS (
+  SELECT 1
+  FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_insert_medium_%s` ssi
+  WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
     AND ssi.ss_item_sk = ssref.ss_item_sk
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
-    );
+);
+""", DATASET, SCALE, DATASET, SCALE);
 
+-- ===================
+-- Merge delete
+-- ===================
+EXECUTE IMMEDIATE FORMAT("""
+MERGE INTO `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s` a
+USING `cacib-lsdh-dev-df.%s.store_sales_denorm_insert_medium_%s` b
+ON a.ss_sold_date_sk = b.ss_sold_date_sk
+AND a.ss_item_sk = b.ss_item_sk
+AND a.ss_ticket_number = b.ss_ticket_number
+WHEN MATCHED THEN DELETE;
+""", DATASET, SCALE, DATASET, SCALE);
 
--- query 2421 ok for x_small delete
-SELECT count(*) FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_xsmall_10G ssi
-WHERE EXISTS (SELECT 1 
-    FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G ssref
-    WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
+-- ===================
+-- Upsert counts
+-- ===================
+EXECUTE IMMEDIATE FORMAT("""
+SELECT COUNT(*) 
+FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_upsert_%s`;
+""", DATASET, SCALE);
+
+EXECUTE IMMEDIATE FORMAT("""
+SELECT COUNT(*)
+FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_upsert_%s` ssi
+WHERE EXISTS (
+  SELECT 1 
+  FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s` ssref
+  WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
     AND ssi.ss_item_sk = ssref.ss_item_sk
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
-    );
+);
+""", DATASET, SCALE, DATASET, SCALE);
 
-
--- query 25125 row good for small delete
-SELECT count(*) FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_small_10G ssi
-WHERE EXISTS (SELECT 1 
-    FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G ssref
-    WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
+-- ===================
+-- Delete xsmall
+-- ===================
+EXECUTE IMMEDIATE FORMAT("""
+SELECT COUNT(*)
+FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_xsmall_%s` ssi
+WHERE EXISTS (
+  SELECT 1 
+  FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s` ssref
+  WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
     AND ssi.ss_item_sk = ssref.ss_item_sk
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
-    );
+);
+""", DATASET, SCALE, DATASET, SCALE);
 
-
--- query 247274 ok for big delete 
-SELECT count(*) FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_medium_10G ssi
-WHERE EXISTS (SELECT 1 
-    FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G ssref
-    WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
+-- ===================
+-- Delete small
+-- ===================
+EXECUTE IMMEDIATE FORMAT("""
+SELECT COUNT(*)
+FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_small_%s` ssi
+WHERE EXISTS (
+  SELECT 1 
+  FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s` ssref
+  WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
     AND ssi.ss_item_sk = ssref.ss_item_sk
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
-    );
--- query intersect small delete and medium only 2787 row good for the delete
-SELECT count(*) FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_medium_10G ssi
-WHERE EXISTS (SELECT 1 
-    FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_small_10G ssref
-    WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
+);
+""", DATASET, SCALE, DATASET, SCALE);
+
+-- ===================
+-- Delete medium
+-- ===================
+EXECUTE IMMEDIATE FORMAT("""
+SELECT COUNT(*)
+FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_medium_%s` ssi
+WHERE EXISTS (
+  SELECT 1 
+  FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s` ssref
+  WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
     AND ssi.ss_item_sk = ssref.ss_item_sk
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
-    );
+);
+""", DATASET, SCALE, DATASET, SCALE);
 
+-- ===================
+-- Intersect delete_small and delete_medium
+-- ===================
+EXECUTE IMMEDIATE FORMAT("""
+SELECT COUNT(*)
+FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_medium_%s` ssi
+WHERE EXISTS (
+  SELECT 1 
+  FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_small_%s` ssref
+  WHERE ssi.ss_sold_date_sk = ssref.ss_sold_date_sk
+    AND ssi.ss_item_sk = ssref.ss_item_sk
+    AND ssi.ss_ticket_number = ssref.ss_ticket_number
+);
+""", DATASET, SCALE, DATASET, SCALE);
