@@ -1,151 +1,176 @@
+-- Declare parameters
+DECLARE SCALE STRING DEFAULT '10G';
+DECLARE DATASET STRING DEFAULT 'bq_ds_lsdh_dev_ew9_bench_bl_std';
 
-DROP TABLE IF EXISTS cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_10G;
-DROP TABLE IF EXISTS cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G;
-DROP TABLE IF EXISTS cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_upsert_10G;
-DROP TABLE IF EXISTS cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_insert_medium_10G;
-DROP TABLE IF EXISTS cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_xsmall_10G;
-DROP TABLE IF EXISTS cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_small_10G;
-DROP TABLE IF EXISTS cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_medium_10G;
+-- ===================
+-- DROP TABLES
+-- ===================
+EXECUTE IMMEDIATE FORMAT("DROP TABLE IF EXISTS `cacib-lsdh-dev-df.%s.store_sales_denorm_%s`;", DATASET, SCALE);
+EXECUTE IMMEDIATE FORMAT("DROP TABLE IF EXISTS `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s`;", DATASET, SCALE);
+EXECUTE IMMEDIATE FORMAT("DROP TABLE IF EXISTS `cacib-lsdh-dev-df.%s.store_sales_denorm_upsert_%s`;", DATASET, SCALE);
+EXECUTE IMMEDIATE FORMAT("DROP TABLE IF EXISTS `cacib-lsdh-dev-df.%s.store_sales_denorm_insert_medium_%s`;", DATASET, SCALE);
+EXECUTE IMMEDIATE FORMAT("DROP TABLE IF EXISTS `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_xsmall_%s`;", DATASET, SCALE);
+EXECUTE IMMEDIATE FORMAT("DROP TABLE IF EXISTS `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_small_%s`;", DATASET, SCALE);
+EXECUTE IMMEDIATE FORMAT("DROP TABLE IF EXISTS `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_medium_%s`;", DATASET, SCALE);
 
-
--- create
-CREATE  OR REPLACE TABLE cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_10G
- PARTITION BY 
-	range_bucket(ss_sold_date_sk,generate_array(2450816,2452642,1))
- AS
-      SELECT *
-        FROM  
-		        cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.store_sales_10G,
-             cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.date_dim_10G,
-             cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.time_dim_10G,
-             cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.customer_10G,
-             cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.customer_demographics_10G,
-             cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.household_demographics_10G,
-             cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.customer_address_10G,
-             cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.store_10G,
-             cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.promotion_10G,
-             cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.item_10G
-       
-	   WHERE ss_sold_date_sk = d_date_sk
-	   
-        AND ss_store_sk     = s_store_sk
-        AND ss_sold_time_sk = t_time_sk
-        AND ss_item_sk      = i_item_sk
-        AND ss_customer_sk  = c_customer_sk
-        AND ss_cdemo_sk     = cd_demo_sk
-        AND ss_hdemo_sk     = hd_demo_sk
-        AND ss_addr_sk      = ca_address_sk
-        AND ss_promo_sk     = p_promo_sk;
-
--- export 
-EXPORT DATA OPTIONS(
-  uri='gs://bkt-lsdh-dev-ew9-bench-bl-raw-data-f72a/convert/10G/store_sales_denorm/*.parquet',
-  format='PARQUET',
-  overwrite=true) AS
-SELECT * FROM  cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_10G;
-
--- create
-
-CREATE OR REPLACE TABLE cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G
-PARTITION BY 
-	range_bucket(ss_sold_date_sk,generate_array(2450816,2452642,1))
-AS
- SELECT *
-        FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_10G
-  WHERE MOD(ss_sold_date_sk, 2) <> 0
-        OR ss_sold_date_sk <= 2452459
-        OR MOD(ss_sold_time_sk, 5) <> 0;
--- export 
-
-EXPORT DATA OPTIONS(
-  uri='gs://bkt-lsdh-dev-ew9-bench-bl-raw-data-f72a/convert/10G/store_sales_denorm_start/*.parquet',
-  format='PARQUET',
-  overwrite=true) AS
-SELECT * FROM  cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_start_10G;
-
--- create
-CREATE OR REPLACE TABLE cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_upsert_10G
-PARTITION BY 
-	range_bucket(ss_sold_date_sk,generate_array(2450816,2452642,1))
-AS
-
+-- ===================
+-- CREATE store_sales_denorm
+-- ===================
+EXECUTE IMMEDIATE FORMAT("""
+CREATE OR REPLACE TABLE `cacib-lsdh-dev-df.%s.store_sales_denorm_%s`
+PARTITION BY range_bucket(ss_sold_date_sk, generate_array(2450816,2452642,1)) AS
 SELECT *
-     FROM  cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_10G
+FROM `cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.store_sales_%s`,
+     `cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.date_dim_%s`,
+     `cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.time_dim_%s`,
+     `cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.customer_%s`,
+     `cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.customer_demographics_%s`,
+     `cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.household_demographics_%s`,
+     `cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.customer_address_%s`,
+     `cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.store_%s`,
+     `cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.promotion_%s`,
+     `cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_ib_ext_tb.item_%s`
+WHERE ss_sold_date_sk = d_date_sk
+  AND ss_store_sk     = s_store_sk
+  AND ss_sold_time_sk = t_time_sk
+  AND ss_item_sk      = i_item_sk
+  AND ss_customer_sk  = c_customer_sk
+  AND ss_cdemo_sk     = cd_demo_sk
+  AND ss_hdemo_sk     = hd_demo_sk
+  AND ss_addr_sk      = ca_address_sk
+  AND ss_promo_sk     = p_promo_sk;
+""", DATASET, SCALE, SCALE, SCALE, SCALE, SCALE, SCALE, SCALE, SCALE, SCALE, SCALE);
+
+EXECUTE IMMEDIATE FORMAT("""
+EXPORT DATA OPTIONS(
+  uri='gs://bkt-lsdh-dev-ew9-bench-bl-raw-data-f72a/convert/%s/store_sales_denorm/*.parquet',
+  format='PARQUET',
+  overwrite=true) AS
+SELECT * FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_%s`;
+""", SCALE, DATASET, SCALE);
+
+-- ===================
+-- CREATE store_sales_denorm_start
+-- ===================
+EXECUTE IMMEDIATE FORMAT("""
+CREATE OR REPLACE TABLE `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s`
+PARTITION BY range_bucket(ss_sold_date_sk, generate_array(2450816,2452642,1)) AS
+SELECT *
+FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_%s`
 WHERE MOD(ss_sold_date_sk, 2) <> 0
-         AND MOD(ss_sold_time_sk, 5) = 0 
-         AND ss_sold_date_sk > 2452459;
+   OR ss_sold_date_sk <= 2452459
+   OR MOD(ss_sold_time_sk, 5) <> 0;
+""", DATASET, SCALE, DATASET, SCALE);
 
--- export
+EXECUTE IMMEDIATE FORMAT("""
 EXPORT DATA OPTIONS(
-  uri='gs://bkt-lsdh-dev-ew9-bench-bl-raw-data-f72a/convert/10G/store_sales_denorm_upsert/*.parquet',
+  uri='gs://bkt-lsdh-dev-ew9-bench-bl-raw-data-f72a/convert/%s/store_sales_denorm_start/*.parquet',
   format='PARQUET',
   overwrite=true) AS
-SELECT * FROM  cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_upsert_10G;
+SELECT * FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_start_%s`;
+""", SCALE, DATASET, SCALE);
 
--- create
-CREATE OR REPLACE TABLE  cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_insert_medium_10G
-PARTITION BY 
-	range_bucket(ss_sold_date_sk,generate_array(2450816,2452642,1))
-AS
+-- ===================
+-- CREATE store_sales_denorm_upsert
+-- ===================
+EXECUTE IMMEDIATE FORMAT("""
+CREATE OR REPLACE TABLE `cacib-lsdh-dev-df.%s.store_sales_denorm_upsert_%s`
+PARTITION BY range_bucket(ss_sold_date_sk, generate_array(2450816,2452642,1)) AS
 SELECT *
-      FROM  cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_10G
+FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_%s`
+WHERE MOD(ss_sold_date_sk, 2) <> 0
+  AND MOD(ss_sold_time_sk, 5) = 0
+  AND ss_sold_date_sk > 2452459;
+""", DATASET, SCALE, DATASET, SCALE);
+
+EXECUTE IMMEDIATE FORMAT("""
+EXPORT DATA OPTIONS(
+  uri='gs://bkt-lsdh-dev-ew9-bench-bl-raw-data-f72a/convert/%s/store_sales_denorm_upsert/*.parquet',
+  format='PARQUET',
+  overwrite=true) AS
+SELECT * FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_upsert_%s`;
+""", SCALE, DATASET, SCALE);
+
+-- ===================
+-- CREATE store_sales_denorm_insert_medium
+-- ===================
+EXECUTE IMMEDIATE FORMAT("""
+CREATE OR REPLACE TABLE `cacib-lsdh-dev-df.%s.store_sales_denorm_insert_medium_%s`
+PARTITION BY range_bucket(ss_sold_date_sk, generate_array(2450816,2452642,1)) AS
+SELECT *
+FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_%s`
 WHERE MOD(ss_sold_date_sk, 2) = 0
-         AND MOD(ss_sold_time_sk, 25) = 0
-         AND ss_sold_date_sk > 2452459;
+  AND MOD(ss_sold_time_sk, 25) = 0
+  AND ss_sold_date_sk > 2452459;
+""", DATASET, SCALE, DATASET, SCALE);
 
---export
+EXECUTE IMMEDIATE FORMAT("""
 EXPORT DATA OPTIONS(
-  uri='gs://bkt-lsdh-dev-ew9-bench-bl-raw-data-f72a/convert/10G/store_sales_denorm_insert_medium/*.parquet',
+  uri='gs://bkt-lsdh-dev-ew9-bench-bl-raw-data-f72a/convert/%s/store_sales_denorm_insert_medium/*.parquet',
   format='PARQUET',
   overwrite=true) AS
-SELECT * FROM  cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_insert_medium_10G;
+SELECT * FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_insert_medium_%s`;
+""", SCALE, DATASET, SCALE);
 
---create
-CREATE OR REPLACE TABLE cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_xsmall_10G
-PARTITION BY 
-	range_bucket(ss_sold_date_sk,generate_array(2450816,2452642,1)) AS    
-  SELECT *
-      FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_10G
-  WHERE MOD(ss_sold_date_sk, 10) = 1
-        AND MOD(ss_sold_time_sk, 100) = 0
-        AND ss_sold_date_sk > 2452459;
--- export 
-EXPORT DATA OPTIONS(
-  uri='gs://bkt-lsdh-dev-ew9-bench-bl-raw-data-f72a/convert/10G/store_sales_denorm_delete_xsmall/*.parquet',
-  format='PARQUET',
-  overwrite=true) AS
-SELECT * FROM  cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_xsmall_10G;
-
---create
-CREATE OR REPLACE TABLE cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_small_10G
-PARTITION BY 
-	range_bucket(ss_sold_date_sk,generate_array(2450816,2452642,1)) AS  
+-- ===================
+-- CREATE store_sales_denorm_delete_xsmall
+-- ===================
+EXECUTE IMMEDIATE FORMAT("""
+CREATE OR REPLACE TABLE `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_xsmall_%s`
+PARTITION BY range_bucket(ss_sold_date_sk, generate_array(2450816,2452642,1)) AS
 SELECT *
-    FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_10G
+FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_%s`
 WHERE MOD(ss_sold_date_sk, 10) = 1
-      AND MOD(ss_sold_time_sk, 10) = 0
-      AND ss_sold_date_sk > 2452459;
--- export
+  AND MOD(ss_sold_time_sk, 100) = 0
+  AND ss_sold_date_sk > 2452459;
+""", DATASET, SCALE, DATASET, SCALE);
+
+EXECUTE IMMEDIATE FORMAT("""
 EXPORT DATA OPTIONS(
-  uri='gs://bkt-lsdh-dev-ew9-bench-bl-raw-data-f72a/convert/10G/store_sales_denorm_delete_small/*.parquet',
+  uri='gs://bkt-lsdh-dev-ew9-bench-bl-raw-data-f72a/convert/%s/store_sales_denorm_delete_xsmall/*.parquet',
   format='PARQUET',
   overwrite=true) AS
-SELECT * FROM  cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_small_10G;
+SELECT * FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_xsmall_%s`;
+""", SCALE, DATASET, SCALE);
 
---create
-CREATE OR REPLACE TABLE cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_medium_10G
-PARTITION BY 
-	range_bucket(ss_sold_date_sk,generate_array(2450816,2452642,1)) AS 
+-- ===================
+-- CREATE store_sales_denorm_delete_small
+-- ===================
+EXECUTE IMMEDIATE FORMAT("""
+CREATE OR REPLACE TABLE `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_small_%s`
+PARTITION BY range_bucket(ss_sold_date_sk, generate_array(2450816,2452642,1)) AS
 SELECT *
-    FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_10G
-WHERE MOD(ss_sold_date_sk, 3) = 1
-      AND MOD(ss_sold_time_sk, 3) = 0
-      AND ss_sold_date_sk > 2452459;
--- export
+FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_%s`
+WHERE MOD(ss_sold_date_sk, 10) = 1
+  AND MOD(ss_sold_time_sk, 10) = 0
+  AND ss_sold_date_sk > 2452459;
+""", DATASET, SCALE, DATASET, SCALE);
+
+EXECUTE IMMEDIATE FORMAT("""
 EXPORT DATA OPTIONS(
-  uri='gs://bkt-lsdh-dev-ew9-bench-bl-raw-data-f72a/convert/10G/store_sales_denorm_delete_medium/*.parquet',
+  uri='gs://bkt-lsdh-dev-ew9-bench-bl-raw-data-f72a/convert/%s/store_sales_denorm_delete_small/*.parquet',
   format='PARQUET',
   overwrite=true) AS
-SELECT * FROM cacib-lsdh-dev-df.bq_ds_lsdh_dev_ew9_bench_bl_std.store_sales_denorm_delete_medium_10G;
+SELECT * FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_small_%s`;
+""", SCALE, DATASET, SCALE);
 
+-- ===================
+-- CREATE store_sales_denorm_delete_medium
+-- ===================
+EXECUTE IMMEDIATE FORMAT("""
+CREATE OR REPLACE TABLE `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_medium_%s`
+PARTITION BY range_bucket(ss_sold_date_sk, generate_array(2450816,2452642,1)) AS
+SELECT *
+FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_%s`
+WHERE MOD(ss_sold_date_sk, 3) = 1
+  AND MOD(ss_sold_time_sk, 3) = 0
+  AND ss_sold_date_sk > 2452459;
+""", DATASET, SCALE, DATASET, SCALE);
 
+EXECUTE IMMEDIATE FORMAT("""
+EXPORT DATA OPTIONS(
+  uri='gs://bkt-lsdh-dev-ew9-bench-bl-raw-data-f72a/convert/%s/store_sales_denorm_delete_medium/*.parquet',
+  format='PARQUET',
+  overwrite=true) AS
+SELECT * FROM `cacib-lsdh-dev-df.%s.store_sales_denorm_delete_medium_%s`;
+""", SCALE, DATASET, SCALE);
