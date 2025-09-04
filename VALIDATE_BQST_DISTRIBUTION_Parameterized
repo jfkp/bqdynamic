@@ -18,8 +18,7 @@ SET sql_query = FORMAT("""
   )
 """, PROJECT, DATASET, SCALE);
 EXECUTE IMMEDIATE sql_query
-INTO duplicate_count
-AT LOCATION REGION;
+INTO duplicate_count;
 
 -- ===================
 -- 2. Conditional execution
@@ -34,8 +33,7 @@ IF duplicate_count > 0 THEN
   FROM `%s.%s.store_sales_denorm_start_%s` t
   GROUP BY ss_sold_date_sk, ss_item_sk, ss_ticket_number;
   """, PROJECT, DATASET, SCALE, REGION, PROJECT, DATASET, SCALE);
-  EXECUTE IMMEDIATE sql_query
-  AT LOCATION REGION;
+  EXECUTE IMMEDIATE sql_query;
 
   -- Step B: Flatten row_data back to full column set
   SET sql_query = FORMAT("""
@@ -44,8 +42,7 @@ IF duplicate_count > 0 THEN
   SELECT row_data.*
   FROM `%s.%s.store_sales_denorm_start_%s`;
   """, PROJECT, DATASET, SCALE, REGION, PROJECT, DATASET, SCALE);
-  EXECUTE IMMEDIATE sql_query
-  AT LOCATION REGION;
+  EXECUTE IMMEDIATE sql_query;
 
   -- Step C: Create audit table if not exists
   SET sql_query = FORMAT("""
@@ -59,8 +56,7 @@ IF duplicate_count > 0 THEN
   )
   OPTIONS(location = '%s');
   """, PROJECT, DATASET, SCALE, REGION);
-  EXECUTE IMMEDIATE sql_query
-  AT LOCATION REGION;
+  EXECUTE IMMEDIATE sql_query;
 
   -- Step D: Insert audit record
   SET sql_query = FORMAT("""
@@ -76,8 +72,7 @@ IF duplicate_count > 0 THEN
     (SELECT COUNT(*) AS cnt FROM `%s.%s.store_sales_denorm_start_%s`) orig,
     (SELECT COUNT(*) AS cnt FROM `%s.%s.store_sales_denorm_start_%s`) dedup;
   """, PROJECT, DATASET, SCALE, DATASET, SCALE, PROJECT, DATASET, SCALE, PROJECT, DATASET, SCALE);
-  EXECUTE IMMEDIATE sql_query
-  AT LOCATION REGION;
+  EXECUTE IMMEDIATE sql_query;
 
 ELSE
   -- ===================
@@ -94,8 +89,7 @@ SET sql_query = FORMAT("""
 SELECT COUNT(*)
 FROM `%s.%s.store_sales_denorm_start_%s`;
 """, PROJECT, DATASET, SCALE);
-EXECUTE IMMEDIATE sql_query
-AT LOCATION REGION;
+EXECUTE IMMEDIATE sql_query;
 
 -- ===================
 -- Insert-medium check (should return 0 rows)
@@ -111,8 +105,7 @@ WHERE EXISTS (
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
 );
 """, PROJECT, DATASET, SCALE, PROJECT, DATASET, SCALE);
-EXECUTE IMMEDIATE sql_query
-AT LOCATION REGION;
+EXECUTE IMMEDIATE sql_query;
 
 -- ===================
 -- Delete using insert-medium
@@ -127,8 +120,7 @@ WHERE EXISTS (
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
 );
 """, PROJECT, DATASET, SCALE, PROJECT, DATASET, SCALE);
-EXECUTE IMMEDIATE sql_query
-AT LOCATION REGION;
+EXECUTE IMMEDIATE sql_query;
 
 -- ===================
 -- Merge delete
@@ -141,8 +133,7 @@ AND a.ss_item_sk = b.ss_item_sk
 AND a.ss_ticket_number = b.ss_ticket_number
 WHEN MATCHED THEN DELETE;
 """, PROJECT, DATASET, SCALE, PROJECT, DATASET, SCALE);
-EXECUTE IMMEDIATE sql_query
-AT LOCATION REGION;
+EXECUTE IMMEDIATE sql_query;
 
 -- ===================
 -- Upsert counts
@@ -151,8 +142,7 @@ SET sql_query = FORMAT("""
 SELECT COUNT(*)
 FROM `%s.%s.store_sales_denorm_upsert_%s`;
 """, PROJECT, DATASET, SCALE);
-EXECUTE IMMEDIATE sql_query
-AT LOCATION REGION;
+EXECUTE IMMEDIATE sql_query;
 
 SET sql_query = FORMAT("""
 SELECT COUNT(*)
@@ -165,8 +155,7 @@ WHERE EXISTS (
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
 );
 """, PROJECT, DATASET, SCALE, PROJECT, DATASET, SCALE);
-EXECUTE IMMEDIATE sql_query
-AT LOCATION REGION;
+EXECUTE IMMEDIATE sql_query;
 
 -- ===================
 -- Delete xsmall
@@ -182,8 +171,7 @@ WHERE EXISTS (
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
 );
 """, PROJECT, DATASET, SCALE, PROJECT, DATASET, SCALE);
-EXECUTE IMMEDIATE sql_query
-AT LOCATION REGION;
+EXECUTE IMMEDIATE sql_query;
 
 -- ===================
 -- Delete small
@@ -199,8 +187,7 @@ WHERE EXISTS (
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
 );
 """, PROJECT, DATASET, SCALE, PROJECT, DATASET, SCALE);
-EXECUTE IMMEDIATE sql_query
-AT LOCATION REGION;
+EXECUTE IMMEDIATE sql_query;
 
 -- ===================
 -- Delete medium
@@ -216,8 +203,7 @@ WHERE EXISTS (
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
 );
 """, PROJECT, DATASET, SCALE, PROJECT, DATASET, SCALE);
-EXECUTE IMMEDIATE sql_query
-AT LOCATION REGION;
+EXECUTE IMMEDIATE sql_query;
 
 -- ===================
 -- Intersect delete_small and delete_medium
@@ -233,5 +219,4 @@ WHERE EXISTS (
     AND ssi.ss_ticket_number = ssref.ss_ticket_number
 );
 """, PROJECT, DATASET, SCALE, PROJECT, DATASET, SCALE);
-EXECUTE IMMEDIATE sql_query
-AT LOCATION REGION;
+EXECUTE IMMEDIATE sql_query;
