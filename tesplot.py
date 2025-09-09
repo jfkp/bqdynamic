@@ -1,0 +1,102 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Put your data in a CSV string or file
+data = """base_type,scale,operation,exec_time,run_id,query,wquery
+BLMS,10G,READ,4.364005184004782,0.0,q1,merge_insert
+BLMS,10G,READ,2.4169755289913155,1.0,q1,merge_insert
+BLMS,10G,READ,2.4371245600050315,2.0,q1,merge_insert
+BLMS,10G,READ,18.898035134989183,0.0,q2,merge_insert
+BLMS,10G,WRITE,410.31895041100506,bulk_load,
+BLMS,10G,WRITE,34.45093625300797,merge_insert,
+BLMS,10G,WRITE,61.13515410499531,merge_update,
+BLMS,10G,WRITE,23.80685163399903,merge_xdelete,
+BLMS,10G,WRITE,19.685425229996326,merge_sdelete,
+BLMT,10G,WRITE,10.581,d_delete,
+BLMT,10G,WRITE,4.359,merge_xdelete,
+BLMT,10G,WRITE,8.047,merge_sdelete,
+BLMT,10G,WRITE,16.237,merge_update,
+BLMT,10G,READ,2.933,1.0,q6,d_delete
+BLMT,10G,READ,7.138,1.0,q8,d_delete
+BLMT,10G,READ,7.867,1.0,q2,d_delete
+BLMT,10G,READ,3.162,1.0,q7,d_delete
+BLMT,10G,READ,2.076,1.0,q9,d_delete
+BQMS,10G,READ,3.3754528909921646,0.0,q1,merge_insert
+BQMS,10G,READ,2.0856350289977854,1.0,q1,merge_insert
+BQMS,10G,READ,1.999142432003282,2.0,q1,merge_insert
+BQMS,10G,READ,23.95874382198963,0.0,q2,merge_insert
+BQMS,10G,READ,14.769499998001264,1.0,q2,merge_insert
+BQMS,10G,READ,12.692071147001116,2.0,q2,merge_insert
+BQMS,10G,WRITE,256.049575846002,bulk_load,
+BQMS,10G,WRITE,25.04492214600032,merge_insert,
+BQMS,10G,WRITE,64.7249343739968,merge_update,
+BQMS,10G,WRITE,24.24865570499969,merge_xdelete,
+BQMS,10G,WRITE,23.780658219999168,merge_sdelete,
+BQMS,10G,WRITE,24.64359486999456,merge_mdelete,
+BQMS,10G,WRITE,10.707954704004806,d_delete,
+BQMN,10G,WRITE,316.1889176140103,bulk_load
+BQMN,10G,WRITE,31.34931990399491,merge_insert
+BQMN,10G,WRITE,63.15389136900194,merge_update
+BQMN,10G,WRITE,24.146586082002614,merge_xdelete
+BQMN,10G,WRITE,21.7237542399962,merge_sdelete
+BQMN,10G,READ,11.971865069004709,0.0,q1,merge_insert
+BQMN,10G,READ,2.3824095799936917,1.0,q1,merge_insert
+BQMN,10G,READ,2.339508040997316,2.0,q1,merge_insert
+BQMN,10G,READ,19.23397877700336,0.0,q2,merge_insert
+BQMN,10G,READ,13.689742728005513,1.0,q2,merge_insert
+BQMN,10G,READ,12.867627685001937,2.0,q2,merge_insert
+BQMN,10G,READ,3.056708757008892,0.0,q3,merge_insert
+BQMN,10G,READ,2.4306927060097223,1.0,q3,merge_insert
+BQMN,10G,READ,2.241507275000913,2.0,q3,merge_insert
+BQST,10G,READ,3.559,1.0,q2,d_delete
+BQST,10G,READ,1.95,1.0,q3,d_delete
+BQST,10G,READ,10.848,1.0,q8,d_delete
+BQST,10G,READ,1.175,1.0,q9,d_delete
+BQST,10G,READ,0.682,1.0,q5,d_delete
+BQST,10G,READ,0.953,1.0,q1,d_delete
+BQST,10G,READ,1.929,1.0,q7,d_delete
+BQST,10G,READ,0.453,1.0,q6,d_delete
+BQST,10G,WRITE,15.059,merge_mdelete,
+BQST,10G,WRITE,17.333,merge_update,
+BQST,10G,WRITE,13.455,merge_sdelete,
+BQST,10G,WRITE,8.835,merge_xdelete,
+BQST,10G,WRITE,8.46,d_delete,
+BQST,10G,WRITE,5.717,merge_insert,
+BQST,10G,WRITE,17.267,load_query,
+BQST,20G,WRITE,6.487,d_delete,
+BQST,20G,WRITE,8.058,merge_mdelete,
+BQST,20G,WRITE,26.708,load_query,
+"""
+
+# Load to DataFrame
+from io import StringIO
+df = pd.read_csv(StringIO(data))
+
+# --- Plot READ times ---
+plt.figure(figsize=(12,6))
+read_df = df[df['operation'] == 'READ']
+for base in read_df['base_type'].unique():
+    subset = read_df[read_df['base_type'] == base]
+    plt.scatter(subset['query'], subset['exec_time'], label=base, alpha=0.7)
+
+plt.title("Read Times per Query by Base Type")
+plt.xlabel("Query")
+plt.ylabel("Execution Time (s)")
+plt.legend()
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+# --- Plot WRITE times ---
+plt.figure(figsize=(12,6))
+write_df = df[df['operation'] == 'WRITE']
+for base in write_df['base_type'].unique():
+    subset = write_df[write_df['base_type'] == base]
+    plt.bar(subset['wquery'] + " (" + subset['base_type'] + ")", subset['exec_time'])
+
+plt.title("Write Times per Operation by Base Type")
+plt.xlabel("Write Operation")
+plt.ylabel("Execution Time (s)")
+plt.xticks(rotation=90)
+plt.tight_layout()
+plt.show()
