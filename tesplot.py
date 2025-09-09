@@ -68,35 +68,78 @@ BQST,20G,WRITE,8.058,merge_mdelete,
 BQST,20G,WRITE,26.708,load_query,
 """
 
-# Load to DataFrame
-from io import StringIO
-df = pd.read_csv(StringIO(data))
+import seaborn as sns
+import matplotlib.pyplot as plt
 
-# --- Plot READ times ---
-plt.figure(figsize=(12,6))
-read_df = df[df['operation'] == 'READ']
-for base in read_df['base_type'].unique():
-    subset = read_df[read_df['base_type'] == base]
-    plt.scatter(subset['query'], subset['exec_time'], label=base, alpha=0.7)
+import seaborn as sns
+import matplotlib.pyplot as plt
 
-plt.title("Read Times per Query by Base Type")
-plt.xlabel("Query")
-plt.ylabel("Execution Time (s)")
-plt.legend()
-plt.xticks(rotation=45)
-plt.tight_layout()
-plt.show()
+def plot_read_line(df):
+    """
+    Line plot for READ execution times across run_id.
+    """
+    read_df = df[df['operation'] == 'READ']
 
-# --- Plot WRITE times ---
-plt.figure(figsize=(12,6))
-write_df = df[df['operation'] == 'WRITE']
-for base in write_df['base_type'].unique():
-    subset = write_df[write_df['base_type'] == base]
-    plt.bar(subset['wquery'] + " (" + subset['base_type'] + ")", subset['exec_time'])
+    plt.figure(figsize=(10,6))
+    sns.lineplot(
+        data=read_df,
+        x="run_id",
+        y="exec_time",
+        hue="query",
+        style="base_type",
+        markers=True,
+        dashes=False
+    )
+    plt.title("Read Execution Times Across Runs")
+    plt.ylabel("Execution Time (s)")
+    plt.xlabel("Run ID")
+    plt.legend(title="Query / Base Type", bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    plt.show()
 
-plt.title("Write Times per Operation by Base Type")
-plt.xlabel("Write Operation")
-plt.ylabel("Execution Time (s)")
-plt.xticks(rotation=90)
-plt.tight_layout()
-plt.show()
+
+def plot_read_box(df):
+    """
+    Boxplot for READ execution times per query.
+    """
+    read_df = df[df['operation'] == 'READ']
+
+    plt.figure(figsize=(10,6))
+    sns.boxplot(
+        data=read_df,
+        x="query",
+        y="exec_time",
+        hue="base_type"
+    )
+    plt.title("Boxplot of Read Execution Times per Query")
+    plt.ylabel("Execution Time (s)")
+    plt.xlabel("Query")
+    plt.legend(title="Base Type", bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_write_strip(df):
+    """
+    Stripplot for WRITE execution times per write operation.
+    """
+    write_df = df[df['operation'] == 'WRITE']
+
+    plt.figure(figsize=(10,6))
+    sns.stripplot(
+        data=write_df,
+        x="wquery",
+        y="exec_time",
+        hue="base_type",
+        dodge=True,
+        jitter=True
+    )
+    plt.title("Strip Plot of Write Execution Times per Operation")
+    plt.ylabel("Execution Time (s)")
+    plt.xlabel("Write Operation")
+    plt.xticks(rotation=45)
+    plt.legend(title="Base Type", bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    plt.show()
+
+
