@@ -284,10 +284,15 @@ generate_consumer_group_scripts() {
 #!/bin/bash
 TOPIC=$1
 GROUP=$2
+LOGFILE=$3
 
 if [ -z "$TOPIC" ] || [ -z "$GROUP" ]; then
-  echo "Usage: ./run_all_consumers.sh <topic> <group>"
+  echo "Usage: ./run_all_consumers.sh <topic> <group> [logfile]"
   exit 1
+fi
+
+if [ -z "$LOGFILE" ]; then
+  LOGFILE=/dev/stdout
 fi
 EOF
 
@@ -295,42 +300,49 @@ EOF
 if [ "\$ENABLE_SSL" = true ]; then
     kafka-console-consumer.sh --bootstrap-server ${HOSTNAME}:${BROKER_SSL_PORT} \\
       --topic \$TOPIC --consumer.config $KAFKA_BASE/config/ssl.properties \\
-      --group \$GROUP --from-beginning
+      --group \$GROUP --from-beginning >> "\$LOGFILE" 2>&1
 else
     kafka-console-consumer.sh --bootstrap-server ${HOSTNAME}:${BROKER_PLAINTEXT_PORT} \\
-      --topic \$TOPIC --group \$GROUP --from-beginning
+      --topic \$TOPIC --group \$GROUP --from-beginning >> "\$LOGFILE" 2>&1
 fi
 EOF
     chmod +x $RUNNER
     echo "Universal consumer runner generated at $RUNNER"
 
-    # Matrix launcher
+    # Dynamic matrix launcher with logs
     MATRIX=$KAFKA_BASE/run_consumer_matrix.sh
+    LOGDIR=$KAFKA_BASE/logs
+    mkdir -p $LOGDIR
+
     cat > $MATRIX <<EOF
 #!/bin/bash
-echo "Starting consumers for all <topic, group> pairs..."
+echo "Regenerating consumer matrix based on files:"
+echo "  Topics: $TOPIC_FILE"
+echo "  Groups: $GROUP_FILE"
+echo "  Logs:   $LOGDIR"
+
 PIDS=()
-EOF
 
-    while read -r topic; do
-        [ -z "$topic" ] && continue
-        [[ "$topic" =~ ^# ]] && continue
-        while read -r group; do
-            [ -z "$group" ] && continue
-            [[ "$group" =~ ^# ]] && continue
-            echo "$KAFKA_BASE/run_all_consumers.sh $topic $group &" >> $MATRIX
-            echo "PIDS+=(\$!)" >> $MATRIX
-        done < "$GROUP_FILE"
-    done < "$TOPIC_FILE"
+while read -r topic; do
+    [ -z "\$topic" ] && continue
+    [[ "\$topic" =~ ^# ]] && continue
+    while read -r group; do
+        [ -z "\$group" ] && continue
+        [[ "\$group" =~ ^# ]] && continue
+        LOGFILE="$LOGDIR/\${topic}_\${group}.log"
+        echo "Starting consumer for topic=\$topic, group=\$group -> \$LOGFILE"
+        $KAFKA_BASE/run_all_consumers.sh \$topic \$group "\$LOGFILE" &
+        PIDS+=(\$!)
+    done < "$GROUP_FILE"
+done < "$TOPIC_FILE"
 
-    cat >> $MATRIX <<'EOF'
-# Wait for all background consumers
-trap "echo 'Stopping all consumers...'; kill ${PIDS[@]}; exit 0" SIGINT SIGTERM
+# Trap Ctrl+C to kill all consumers
+trap "echo 'Stopping all consumers...'; kill \${PIDS[@]} 2>/dev/null; exit 0" SIGINT SIGTERM
+
 wait
 EOF
-
     chmod +x $MATRIX
-    echo "Consumer matrix script generated at $MATRIX"
+    echo "Dynamic consumer matrix script with per-group/topic logs generated at $MATRIX"
 }
 
 
@@ -434,7 +446,7 @@ usage() {
     echo "$KAFKA_BASE/run_producer.sh my_topic"
     echo "$KAFKA_BASE/run_consumer.sh my_topic"
     echo "$KAFKA_BASE/run_all_consumers.sh my_topic my_group   # Run a single consumer with specific group"
-    echo "$KAFKA_BASE/run_consumer_matrix.sh                  # Run consumers for all <topic, group> pairs"
+    echo "$KAFKA_BASE/run_consumer_matrix.sh                  # Auto-launch all <topic, group> consumers dynamically"
     echo "./kafka_script.sh cleanup_kafka"
 }
 
