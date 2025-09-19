@@ -263,6 +263,78 @@ EOF
 }
 
 # ==============================
+# Generate Consumer Scripts for Groups & Topics
+# ==============================
+generate_consumer_group_scripts() {
+    TOPIC_FILE=$PROJECT_BASE/topics
+    GROUP_FILE=$PROJECT_BASE/consumer_groups
+
+    if [ ! -f "$TOPIC_FILE" ]; then
+        echo "No topics file found at $TOPIC_FILE"
+        return 1
+    fi
+    if [ ! -f "$GROUP_FILE" ]; then
+        echo "No consumer_groups file found at $GROUP_FILE"
+        return 1
+    fi
+
+    # Universal runner script
+    RUNNER=$KAFKA_BASE/run_all_consumers.sh
+    cat > $RUNNER <<'EOF'
+#!/bin/bash
+TOPIC=$1
+GROUP=$2
+
+if [ -z "$TOPIC" ] || [ -z "$GROUP" ]; then
+  echo "Usage: ./run_all_consumers.sh <topic> <group>"
+  exit 1
+fi
+EOF
+
+    cat >> $RUNNER <<EOF
+if [ "\$ENABLE_SSL" = true ]; then
+    kafka-console-consumer.sh --bootstrap-server ${HOSTNAME}:${BROKER_SSL_PORT} \\
+      --topic \$TOPIC --consumer.config $KAFKA_BASE/config/ssl.properties \\
+      --group \$GROUP --from-beginning
+else
+    kafka-console-consumer.sh --bootstrap-server ${HOSTNAME}:${BROKER_PLAINTEXT_PORT} \\
+      --topic \$TOPIC --group \$GROUP --from-beginning
+fi
+EOF
+    chmod +x $RUNNER
+    echo "Universal consumer runner generated at $RUNNER"
+
+    # Matrix launcher
+    MATRIX=$KAFKA_BASE/run_consumer_matrix.sh
+    cat > $MATRIX <<EOF
+#!/bin/bash
+echo "Starting consumers for all <topic, group> pairs..."
+PIDS=()
+EOF
+
+    while read -r topic; do
+        [ -z "$topic" ] && continue
+        [[ "$topic" =~ ^# ]] && continue
+        while read -r group; do
+            [ -z "$group" ] && continue
+            [[ "$group" =~ ^# ]] && continue
+            echo "$KAFKA_BASE/run_all_consumers.sh $topic $group &" >> $MATRIX
+            echo "PIDS+=(\$!)" >> $MATRIX
+        done < "$GROUP_FILE"
+    done < "$TOPIC_FILE"
+
+    cat >> $MATRIX <<'EOF'
+# Wait for all background consumers
+trap "echo 'Stopping all consumers...'; kill ${PIDS[@]}; exit 0" SIGINT SIGTERM
+wait
+EOF
+
+    chmod +x $MATRIX
+    echo "Consumer matrix script generated at $MATRIX"
+}
+
+
+# ==============================
 # Systemd Service
 # ==============================
 create_systemd_service() {
@@ -340,7 +412,9 @@ phase1() {
     configure_server
     generate_producer_script
     generate_consumer_script
+    generate_consumer_group_scripts   # NEW
 }
+
 
 phase2() {
     start_kafka
@@ -359,8 +433,11 @@ usage() {
     echo "./kafka_script.sh phase3"
     echo "$KAFKA_BASE/run_producer.sh my_topic"
     echo "$KAFKA_BASE/run_consumer.sh my_topic"
+    echo "$KAFKA_BASE/run_all_consumers.sh my_topic my_group   # Run a single consumer with specific group"
+    echo "$KAFKA_BASE/run_consumer_matrix.sh                  # Run consumers for all <topic, group> pairs"
     echo "./kafka_script.sh cleanup_kafka"
 }
+
 
 # ==============================
 # Execute requested function
