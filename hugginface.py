@@ -100,269 +100,147 @@ model = SentenceTransformer("models/all-MiniLM-L6-v2")
 embedding = model.encode("Hello from offline mode")
 print(embedding[:5])
 
+import requests
+from requests.auth import HTTPBasicAuth
 
-         {
-    "took": 10,
-    "timed_out": false,
-    "_shards": {
-        "total": 7,
-        "successful": 7,
-        "skipped": 0,
-        "failed": 0
-    },
-    "hits": {
-        "total": {
-            "value": 582,
-            "relation": "eq"
-        },
-        "max_score": 1,
-        "hits": [
-            {
-                "_index": ".kibana_1",
-                "_id": "config:2.8.0",
-                "_score": 1,
-                "_source": {
-                    "config": {
-                        "buildNum": 6182
-                    },
-                    "type": "config",
-                    "references": [],
-                    "migrationVersion": {
-                        "config": "7.9.0"
-                    },
-                    "updated_at": "2025-09-19T14:37:01.990Z"
-                }
-            },
-            {
-                "_index": "security-auditlog-2025.09.10",
-                "_id": "PAqJM5kBEy-iU1hoLCdn",
-                "_score": 1,
-                "_source": {
-                    "audit_cluster_name": "opensearch-gaas",
-                    "audit_node_name": "opensearch-gaas-bootstrap-0",
-                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:197",
-                    "audit_transport_request_type": "CreateIndexRequest",
-                    "audit_category": "INDEX_EVENT",
-                    "audit_request_origin": "REST",
-                    "audit_request_body": "{\"number_of_shards\":\"1\",\"auto_expand_replicas\":\"0-1\"}",
-                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
-                    "audit_request_layer": "TRANSPORT",
-                    "@timestamp": "2025-09-10T12:10:49.204+00:00",
-                    "audit_format_version": 4,
-                    "audit_request_remote_address": "10.42.7.136",
-                    "audit_request_privilege": "indices:admin/create",
-                    "audit_node_host_address": "10.42.7.135",
-                    "audit_request_effective_user": "admin",
-                    "audit_trace_indices": [
-                        ".kibana_1"
-                    ],
-                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
-                }
-            },
-            {
-                "_index": "security-auditlog-2025.09.10",
-                "_id": "QwqJM5kBEy-iU1hoPCe7",
-                "_score": 1,
-                "_source": {
-                    "audit_cluster_name": "opensearch-gaas",
-                    "audit_node_name": "opensearch-gaas-bootstrap-0",
-                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:289",
-                    "audit_transport_request_type": "RefreshRequest",
-                    "audit_category": "INDEX_EVENT",
-                    "audit_request_origin": "REST",
-                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
-                    "audit_request_layer": "TRANSPORT",
-                    "@timestamp": "2025-09-10T12:10:56.058+00:00",
-                    "audit_format_version": 4,
-                    "audit_request_remote_address": "10.42.10.152",
-                    "audit_request_privilege": "indices:admin/refresh",
-                    "audit_node_host_address": "10.42.7.135",
-                    "audit_request_effective_user": "admin",
-                    "audit_trace_indices": [
-                        ".kibana_1"
-                    ],
-                    "audit_trace_resolved_indices": [
-                        ".kibana_1"
-                    ],
-                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
-                }
-            },
-            {
-                "_index": "security-auditlog-2025.09.10",
-                "_id": "QAqJM5kBEy-iU1hoOCcw",
-                "_score": 1,
-                "_source": {
-                    "audit_cluster_name": "opensearch-gaas",
-                    "audit_node_name": "opensearch-gaas-bootstrap-0",
-                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:273",
-                    "audit_transport_request_type": "GetIndexRequest",
-                    "audit_category": "INDEX_EVENT",
-                    "audit_request_origin": "REST",
-                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
-                    "audit_request_layer": "TRANSPORT",
-                    "@timestamp": "2025-09-10T12:10:54.894+00:00",
-                    "audit_format_version": 4,
-                    "audit_request_remote_address": "10.42.7.136",
-                    "audit_request_privilege": "indices:admin/get",
-                    "audit_node_host_address": "10.42.7.135",
-                    "audit_request_effective_user": "admin",
-                    "audit_trace_indices": [
-                        ".kibana"
-                    ],
-                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
-                }
-            },
-            {
-                "_index": "security-auditlog-2025.09.10",
-                "_id": "OAqJM5kBEy-iU1hoJydk",
-                "_score": 1,
-                "_source": {
-                    "audit_cluster_name": "opensearch-gaas",
-                    "audit_node_name": "opensearch-gaas-bootstrap-0",
-                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:181",
-                    "audit_transport_request_type": "GetIndexRequest",
-                    "audit_category": "INDEX_EVENT",
-                    "audit_request_origin": "REST",
-                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
-                    "audit_request_layer": "TRANSPORT",
-                    "@timestamp": "2025-09-10T12:10:48.755+00:00",
-                    "audit_format_version": 4,
-                    "audit_request_remote_address": "10.42.10.152",
-                    "audit_request_privilege": "indices:admin/get",
-                    "audit_node_host_address": "10.42.7.135",
-                    "audit_request_effective_user": "admin",
-                    "audit_trace_indices": [
-                        ".kibana"
-                    ],
-                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
-                }
-            },
-            {
-                "_index": "security-auditlog-2025.09.10",
-                "_id": "OgqJM5kBEy-iU1hoLCdl",
-                "_score": 1,
-                "_source": {
-                    "audit_cluster_name": "opensearch-gaas",
-                    "audit_node_name": "opensearch-gaas-bootstrap-0",
-                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:190",
-                    "audit_transport_request_type": "GetIndexRequest",
-                    "audit_category": "INDEX_EVENT",
-                    "audit_request_origin": "REST",
-                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
-                    "audit_request_layer": "TRANSPORT",
-                    "@timestamp": "2025-09-10T12:10:49.189+00:00",
-                    "audit_format_version": 4,
-                    "audit_request_remote_address": "10.42.7.136",
-                    "audit_request_privilege": "indices:admin/get",
-                    "audit_node_host_address": "10.42.7.135",
-                    "audit_request_effective_user": "admin",
-                    "audit_trace_indices": [
-                        ".kibana"
-                    ],
-                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
-                }
-            },
-            {
-                "_index": "security-auditlog-2025.09.10",
-                "_id": "OwqJM5kBEy-iU1hoLCdm",
-                "_score": 1,
-                "_source": {
-                    "audit_cluster_name": "opensearch-gaas",
-                    "audit_node_name": "opensearch-gaas-bootstrap-0",
-                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:193",
-                    "audit_transport_request_type": "GetIndexRequest",
-                    "audit_category": "INDEX_EVENT",
-                    "audit_request_origin": "REST",
-                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
-                    "audit_request_layer": "TRANSPORT",
-                    "@timestamp": "2025-09-10T12:10:49.196+00:00",
-                    "audit_format_version": 4,
-                    "audit_request_remote_address": "10.42.7.136",
-                    "audit_request_privilege": "indices:admin/get",
-                    "audit_node_host_address": "10.42.7.135",
-                    "audit_request_effective_user": "admin",
-                    "audit_trace_indices": [
-                        ".kibana"
-                    ],
-                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
-                }
-            },
-            {
-                "_index": "security-auditlog-2025.09.10",
-                "_id": "PgqJM5kBEy-iU1hoMSfm",
-                "_score": 1,
-                "_source": {
-                    "audit_cluster_name": "opensearch-gaas",
-                    "audit_node_name": "opensearch-gaas-bootstrap-0",
-                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:177",
-                    "audit_transport_request_type": "GetIndexRequest",
-                    "audit_category": "INDEX_EVENT",
-                    "audit_request_origin": "REST",
-                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
-                    "audit_request_layer": "TRANSPORT",
-                    "@timestamp": "2025-09-10T12:10:48.676+00:00",
-                    "audit_format_version": 4,
-                    "audit_request_remote_address": "10.42.10.152",
-                    "audit_request_privilege": "indices:admin/get",
-                    "audit_node_host_address": "10.42.7.135",
-                    "audit_request_effective_user": "admin",
-                    "audit_trace_indices": [
-                        ".kibana"
-                    ],
-                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
-                }
-            },
-            {
-                "_index": "security-auditlog-2025.09.10",
-                "_id": "PQqJM5kBEy-iU1hoLCdt",
-                "_score": 1,
-                "_source": {
-                    "audit_cluster_name": "opensearch-gaas",
-                    "audit_node_name": "opensearch-gaas-bootstrap-0",
-                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:243",
-                    "audit_transport_request_type": "GetIndexRequest",
-                    "audit_category": "INDEX_EVENT",
-                    "audit_request_origin": "REST",
-                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
-                    "audit_request_layer": "TRANSPORT",
-                    "@timestamp": "2025-09-10T12:10:51.883+00:00",
-                    "audit_format_version": 4,
-                    "audit_request_remote_address": "10.42.7.136",
-                    "audit_request_privilege": "indices:admin/get",
-                    "audit_node_host_address": "10.42.7.135",
-                    "audit_request_effective_user": "admin",
-                    "audit_trace_indices": [
-                        ".kibana"
-                    ],
-                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
-                }
-            },
-            {
-                "_index": "security-auditlog-2025.09.10",
-                "_id": "PwqJM5kBEy-iU1hoMidO",
-                "_score": 1,
-                "_source": {
-                    "audit_cluster_name": "opensearch-gaas",
-                    "audit_node_name": "opensearch-gaas-bootstrap-0",
-                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:258",
-                    "audit_transport_request_type": "GetIndexRequest",
-                    "audit_category": "INDEX_EVENT",
-                    "audit_request_origin": "REST",
-                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
-                    "audit_request_layer": "TRANSPORT",
-                    "@timestamp": "2025-09-10T12:10:53.389+00:00",
-                    "audit_format_version": 4,
-                    "audit_request_remote_address": "10.42.7.136",
-                    "audit_request_privilege": "indices:admin/get",
-                    "audit_node_host_address": "10.42.7.135",
-                    "audit_request_effective_user": "admin",
-                    "audit_trace_indices": [
-                        ".kibana"
-                    ],
-                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
-                }
-            }
-        ]
-    }
-}
-         
+BASE_URL = "https://opensearch-gaas-dashboard.se-int-caas.ca.cib/api/console/proxy"
+
+auth = HTTPBasicAuth("username", "password")
+
+import requests
+from requests.auth import HTTPBasicAuth
+
+
+
+import json
+import requests
+from requests.auth import HTTPBasicAuth
+
+import json
+import requests
+from requests.auth import HTTPBasicAuth
+
+class OpenSearchProxyClient:
+    def __init__(self, base_url, username=None, password=None, verify_ssl=False):
+        self.base_url = base_url.rstrip("/") + "/api/console/proxy"
+        self.auth = HTTPBasicAuth(username, password) if username and password else None
+        self.verify_ssl = verify_ssl
+
+    def _call(self, path, method="GET", body=None, params=None, ndjson=False):
+        url = f"{self.base_url}?path={path}&method={method}"
+        headers = {"Content-Type": "application/json"}
+        data = None
+
+        if ndjson and body:  # for bulk requests
+            headers["Content-Type"] = "application/x-ndjson"
+            data = "\n".join(body) + "\n"
+        elif body:
+            data = body
+
+        resp = requests.request(
+            method=method,
+            url=url,
+            auth=self.auth,
+            verify=self.verify_ssl,
+            headers=headers,
+            json=None if ndjson else body,
+            data=data if ndjson else None,
+            params=params
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    # --- API wrappers ---
+    def info(self):
+        return self._call("/")
+
+    def search(self, index=None, body=None, size=10):
+        path = f"{index}/_search" if index else "_search"
+        return self._call(path, method="POST", body=body or {"query": {"match_all": {}}}, params={"size": size})
+
+    def list_indices(self):
+        return self._call("_cat/indices?format=json")
+
+    def get_index(self, index):
+        return self._call(index, method="GET")
+
+    def count(self, index=None, body=None):
+        path = f"{index}/_count" if index else "_count"
+        return self._call(path, method="POST", body=body or {"query": {"match_all": {}}})
+
+    def index(self, index, id=None, body=None):
+        path = f"{index}/_doc"
+        if id:
+            path += f"/{id}"
+        return self._call(path, method="POST", body=body)
+
+    def bulk(self, actions, index=None):
+        ndjson_lines = []
+        for action in actions:
+            if "index" in action:
+                meta = {"index": {"_index": index or action["index"].get("_index"), "_id": action["index"].get("_id")}}
+                ndjson_lines.append(json.dumps(meta))
+                ndjson_lines.append(json.dumps(action["index"]["doc"]))
+            elif "delete" in action:
+                meta = {"delete": {"_index": index or action["delete"].get("_index"), "_id": action["delete"]["_id"]}}
+                ndjson_lines.append(json.dumps(meta))
+            elif "update" in action:
+                meta = {"update": {"_index": index or action["update"].get("_index"), "_id": action["update"]["_id"]}}
+                ndjson_lines.append(json.dumps(meta))
+                ndjson_lines.append(json.dumps({"doc": action["update"]["doc"]}))
+            else:
+                raise ValueError(f"Unsupported bulk action: {action}")
+        return self._call("_bulk", method="POST", body=ndjson_lines, ndjson=True)
+
+    def scan(self, index, query=None, scroll="2m", size=1000):
+        """
+        Generator to iterate through all docs in an index using scroll.
+        :param index: index name
+        :param query: query dict (defaults to match_all)
+        :param scroll: keep scroll context alive (e.g. "2m")
+        :param size: batch size per scroll
+        """
+        # Initial search with scroll
+        body = query or {"query": {"match_all": {}}}
+        params = {"scroll": scroll, "size": size}
+        result = self._call(f"{index}/_search", method="POST", body=body, params=params)
+
+        scroll_id = result.get("_scroll_id")
+        hits = result["hits"]["hits"]
+
+        while hits:
+            for hit in hits:
+                yield hit
+
+            # Get next batch
+            result = self._call("_search/scroll", method="POST", body={"scroll": scroll, "scroll_id": scroll_id})
+            scroll_id = result.get("_scroll_id")
+            hits = result["hits"]["hits"]
+client = OpenSearchProxyClient(
+    base_url="https://opensearch-gaas-dashboard.se-int-caas.ca.cib",
+    username="admin",
+    password="yourpassword",
+    verify_ssl=False
+)
+
+# Scan through all documents in an index
+for doc in client.scan(index="security-auditlog-2025.09.10", size=500):
+    print(doc["_id"], doc["_source"])
+
+
+bulk_res = client.bulk([
+    {"index": {"_id": "1", "doc": {"user": "alice", "msg": "hello"}}},
+    {"index": {"_id": "2", "doc": {"user": "bob", "msg": "hi"}}}
+], index="my-index")
+
+print("Bulk result:", bulk_res)
+
+bulk_res = client.bulk([
+    {"delete": {"_id": "1"}}
+], index="my-index")
+
+bulk_res = client.bulk([
+    {"update": {"_id": "2", "doc": {"msg": "updated hi"}}}
+], index="my-index")
+
+
