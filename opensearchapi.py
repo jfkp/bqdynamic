@@ -122,3 +122,18 @@ class OpenSearchAPI:
     def delete_by_query(self, index, query):
         """Delete documents matching a query"""
         return self.client.delete_by_query(index=index, body={"query": query})
+
+
+# sample usage 
+
+api = OpenSearchAPI(
+    host="opensearch-gaas.se-int-caas.ca.cib",
+    port=9200,
+    username="admin",
+    password="yourpassword",
+    use_ssl=True,
+    verify_certs=False
+)
+
+# Create index
+api.create_index("my-index", mapping_file="user_index_mapping.json")
