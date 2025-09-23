@@ -122,24 +122,3 @@ class OpenSearchAPI:
     def delete_by_query(self, index, query):
         """Delete documents matching a query"""
         return self.client.delete_by_query(index=index, body={"query": query})
-
-
-sample index.mapping
-
-{
-  "settings": {
-    "number_of_shards": 1,
-    "number_of_replicas": 1
-  },
-  "mappings": {
-    "properties": {
-      "user": { "type": "keyword" },
-      "msg": { "type": "text" },
-      "timestamp": { "type": "date" }
-    }
-  }
-}
-
-
-# Suppose we add a new field "status" in mapping file
-api.update_mapping("my-index", "user_index_mapping.json")
