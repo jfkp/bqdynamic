@@ -137,3 +137,155 @@ api = OpenSearchAPI(
 
 # Create index
 api.create_index("my-index", mapping_file="user_index_mapping.json")
+
+
+
+
+
+
+This covers all your API methods:
+
+info list_indices
+
+create_index / update_mapping / delete_index
+
+index_doc / get_doc / delete_doc
+
+bulk_index
+
+search / scan
+
+update_doc / update_by_query / delete_by_query
+
+#### pytest 
+import pytest
+import tempfile
+import json
+from opensearchpy.exceptions import NotFoundError
+from my_opensearch_api import OpenSearchAPI  # <-- your class file
+
+
+@pytest.fixture(scope="module")
+def client():
+    # create an API client to local dev/test OpenSearch
+    api = OpenSearchAPI(
+        host="localhost",
+        port=9200,
+        username="admin",
+        password="admin",
+        use_ssl=False,
+    )
+    return api
+
+
+def test_info(client):
+    info = client.info()
+    assert "version" in info
+
+
+def test_index_operations(client):
+    index_name = "test-index"
+
+    # Create index with mapping file
+    with tempfile.NamedTemporaryFile("w+", suffix=".json", delete=False) as f:
+        mapping = {
+            "settings": {"number_of_shards": 1},
+            "mappings": {"properties": {"field": {"type": "text"}}},
+        }
+        json.dump(mapping, f)
+        f.flush()
+        client.create_index(index_name, mapping_file=f.name)
+
+    # List indices
+    indices = client.list_indices("test-*")
+    assert index_name in indices
+
+    # Update mapping
+    with tempfile.NamedTemporaryFile("w+", suffix=".json", delete=False) as f:
+        new_mapping = {
+            "mappings": {"properties": {"field": {"type": "keyword"}}}
+        }
+        json.dump(new_mapping, f)
+        f.flush()
+        resp = client.update_mapping(index_name, mapping_file=f.name)
+        assert resp["acknowledged"]
+
+    # Delete index
+    resp = client.delete_index(index_name)
+    assert resp["acknowledged"]
+
+
+def test_document_operations(client):
+    index_name = "test-docs"
+    client.create_index(index_name)
+
+    # Index document
+    resp = client.index_doc(index=index_name, doc_id="1", body={"field": "value"})
+    assert resp["result"] in ["created", "updated"]
+
+    # Get document
+    doc = client.get_doc(index=index_name, doc_id="1")
+    assert doc["_source"]["field"] == "value"
+
+    # Update document
+    client.update_doc(index=index_name, doc_id="1", body={"field": "new"})
+    doc = client.get_doc(index=index_name, doc_id="1")
+    assert doc["_source"]["field"] == "new"
+
+    # Delete document
+    client.delete_doc(index=index_name, doc_id="1")
+    with pytest.raises(NotFoundError):
+        client.get_doc(index=index_name, doc_id="1")
+
+    client.delete_index(index_name)
+
+
+def test_bulk_index_and_search(client):
+    index_name = "test-bulk"
+    docs = [
+        {"_id": "1", "field": "alpha"},
+        {"_id": "2", "field": "beta"},
+        {"_id": "3", "field": "gamma"},
+    ]
+
+    success = client.bulk_index(index=index_name, docs=docs)
+    assert success == len(docs)
+
+    # Search
+    query = {"match": {"field": "alpha"}}
+    results = client.search(index=index_name, query=query)
+    assert results["hits"]["total"]["value"] >= 1
+
+    # Scan
+    query = {"match_all": {}}
+    scanned = list(client.scan(index=index_name, query=query))
+    assert len(scanned) == 3
+
+    client.delete_index(index_name)
+
+
+def test_update_by_query_and_delete_by_query(client):
+    index_name = "test-update-delete"
+    docs = [
+        {"_id": "1", "field": "x"},
+        {"_id": "2", "field": "y"},
+    ]
+    client.bulk_index(index=index_name, docs=docs)
+
+    # Update by query
+    query = {"match": {"field": "x"}}
+    script = {"source": "ctx._source.field = 'z'"}
+    resp = client.update_by_query(index=index_name, query=query, script=script)
+    assert resp["updated"] >= 1
+
+    # Delete by query
+    query = {"match": {"field": "y"}}
+    resp = client.delete_by_query(index=index_name, query=query)
+    assert resp["deleted"] >= 1
+
+    client.delete_index(index_name)
+
+
+pip install opensearch-py pytest
+
+pytest -v
