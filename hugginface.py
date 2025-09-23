@@ -100,4 +100,269 @@ model = SentenceTransformer("models/all-MiniLM-L6-v2")
 embedding = model.encode("Hello from offline mode")
 print(embedding[:5])
 
+
+         {
+    "took": 10,
+    "timed_out": false,
+    "_shards": {
+        "total": 7,
+        "successful": 7,
+        "skipped": 0,
+        "failed": 0
+    },
+    "hits": {
+        "total": {
+            "value": 582,
+            "relation": "eq"
+        },
+        "max_score": 1,
+        "hits": [
+            {
+                "_index": ".kibana_1",
+                "_id": "config:2.8.0",
+                "_score": 1,
+                "_source": {
+                    "config": {
+                        "buildNum": 6182
+                    },
+                    "type": "config",
+                    "references": [],
+                    "migrationVersion": {
+                        "config": "7.9.0"
+                    },
+                    "updated_at": "2025-09-19T14:37:01.990Z"
+                }
+            },
+            {
+                "_index": "security-auditlog-2025.09.10",
+                "_id": "PAqJM5kBEy-iU1hoLCdn",
+                "_score": 1,
+                "_source": {
+                    "audit_cluster_name": "opensearch-gaas",
+                    "audit_node_name": "opensearch-gaas-bootstrap-0",
+                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:197",
+                    "audit_transport_request_type": "CreateIndexRequest",
+                    "audit_category": "INDEX_EVENT",
+                    "audit_request_origin": "REST",
+                    "audit_request_body": "{\"number_of_shards\":\"1\",\"auto_expand_replicas\":\"0-1\"}",
+                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
+                    "audit_request_layer": "TRANSPORT",
+                    "@timestamp": "2025-09-10T12:10:49.204+00:00",
+                    "audit_format_version": 4,
+                    "audit_request_remote_address": "10.42.7.136",
+                    "audit_request_privilege": "indices:admin/create",
+                    "audit_node_host_address": "10.42.7.135",
+                    "audit_request_effective_user": "admin",
+                    "audit_trace_indices": [
+                        ".kibana_1"
+                    ],
+                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
+                }
+            },
+            {
+                "_index": "security-auditlog-2025.09.10",
+                "_id": "QwqJM5kBEy-iU1hoPCe7",
+                "_score": 1,
+                "_source": {
+                    "audit_cluster_name": "opensearch-gaas",
+                    "audit_node_name": "opensearch-gaas-bootstrap-0",
+                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:289",
+                    "audit_transport_request_type": "RefreshRequest",
+                    "audit_category": "INDEX_EVENT",
+                    "audit_request_origin": "REST",
+                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
+                    "audit_request_layer": "TRANSPORT",
+                    "@timestamp": "2025-09-10T12:10:56.058+00:00",
+                    "audit_format_version": 4,
+                    "audit_request_remote_address": "10.42.10.152",
+                    "audit_request_privilege": "indices:admin/refresh",
+                    "audit_node_host_address": "10.42.7.135",
+                    "audit_request_effective_user": "admin",
+                    "audit_trace_indices": [
+                        ".kibana_1"
+                    ],
+                    "audit_trace_resolved_indices": [
+                        ".kibana_1"
+                    ],
+                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
+                }
+            },
+            {
+                "_index": "security-auditlog-2025.09.10",
+                "_id": "QAqJM5kBEy-iU1hoOCcw",
+                "_score": 1,
+                "_source": {
+                    "audit_cluster_name": "opensearch-gaas",
+                    "audit_node_name": "opensearch-gaas-bootstrap-0",
+                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:273",
+                    "audit_transport_request_type": "GetIndexRequest",
+                    "audit_category": "INDEX_EVENT",
+                    "audit_request_origin": "REST",
+                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
+                    "audit_request_layer": "TRANSPORT",
+                    "@timestamp": "2025-09-10T12:10:54.894+00:00",
+                    "audit_format_version": 4,
+                    "audit_request_remote_address": "10.42.7.136",
+                    "audit_request_privilege": "indices:admin/get",
+                    "audit_node_host_address": "10.42.7.135",
+                    "audit_request_effective_user": "admin",
+                    "audit_trace_indices": [
+                        ".kibana"
+                    ],
+                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
+                }
+            },
+            {
+                "_index": "security-auditlog-2025.09.10",
+                "_id": "OAqJM5kBEy-iU1hoJydk",
+                "_score": 1,
+                "_source": {
+                    "audit_cluster_name": "opensearch-gaas",
+                    "audit_node_name": "opensearch-gaas-bootstrap-0",
+                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:181",
+                    "audit_transport_request_type": "GetIndexRequest",
+                    "audit_category": "INDEX_EVENT",
+                    "audit_request_origin": "REST",
+                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
+                    "audit_request_layer": "TRANSPORT",
+                    "@timestamp": "2025-09-10T12:10:48.755+00:00",
+                    "audit_format_version": 4,
+                    "audit_request_remote_address": "10.42.10.152",
+                    "audit_request_privilege": "indices:admin/get",
+                    "audit_node_host_address": "10.42.7.135",
+                    "audit_request_effective_user": "admin",
+                    "audit_trace_indices": [
+                        ".kibana"
+                    ],
+                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
+                }
+            },
+            {
+                "_index": "security-auditlog-2025.09.10",
+                "_id": "OgqJM5kBEy-iU1hoLCdl",
+                "_score": 1,
+                "_source": {
+                    "audit_cluster_name": "opensearch-gaas",
+                    "audit_node_name": "opensearch-gaas-bootstrap-0",
+                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:190",
+                    "audit_transport_request_type": "GetIndexRequest",
+                    "audit_category": "INDEX_EVENT",
+                    "audit_request_origin": "REST",
+                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
+                    "audit_request_layer": "TRANSPORT",
+                    "@timestamp": "2025-09-10T12:10:49.189+00:00",
+                    "audit_format_version": 4,
+                    "audit_request_remote_address": "10.42.7.136",
+                    "audit_request_privilege": "indices:admin/get",
+                    "audit_node_host_address": "10.42.7.135",
+                    "audit_request_effective_user": "admin",
+                    "audit_trace_indices": [
+                        ".kibana"
+                    ],
+                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
+                }
+            },
+            {
+                "_index": "security-auditlog-2025.09.10",
+                "_id": "OwqJM5kBEy-iU1hoLCdm",
+                "_score": 1,
+                "_source": {
+                    "audit_cluster_name": "opensearch-gaas",
+                    "audit_node_name": "opensearch-gaas-bootstrap-0",
+                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:193",
+                    "audit_transport_request_type": "GetIndexRequest",
+                    "audit_category": "INDEX_EVENT",
+                    "audit_request_origin": "REST",
+                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
+                    "audit_request_layer": "TRANSPORT",
+                    "@timestamp": "2025-09-10T12:10:49.196+00:00",
+                    "audit_format_version": 4,
+                    "audit_request_remote_address": "10.42.7.136",
+                    "audit_request_privilege": "indices:admin/get",
+                    "audit_node_host_address": "10.42.7.135",
+                    "audit_request_effective_user": "admin",
+                    "audit_trace_indices": [
+                        ".kibana"
+                    ],
+                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
+                }
+            },
+            {
+                "_index": "security-auditlog-2025.09.10",
+                "_id": "PgqJM5kBEy-iU1hoMSfm",
+                "_score": 1,
+                "_source": {
+                    "audit_cluster_name": "opensearch-gaas",
+                    "audit_node_name": "opensearch-gaas-bootstrap-0",
+                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:177",
+                    "audit_transport_request_type": "GetIndexRequest",
+                    "audit_category": "INDEX_EVENT",
+                    "audit_request_origin": "REST",
+                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
+                    "audit_request_layer": "TRANSPORT",
+                    "@timestamp": "2025-09-10T12:10:48.676+00:00",
+                    "audit_format_version": 4,
+                    "audit_request_remote_address": "10.42.10.152",
+                    "audit_request_privilege": "indices:admin/get",
+                    "audit_node_host_address": "10.42.7.135",
+                    "audit_request_effective_user": "admin",
+                    "audit_trace_indices": [
+                        ".kibana"
+                    ],
+                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
+                }
+            },
+            {
+                "_index": "security-auditlog-2025.09.10",
+                "_id": "PQqJM5kBEy-iU1hoLCdt",
+                "_score": 1,
+                "_source": {
+                    "audit_cluster_name": "opensearch-gaas",
+                    "audit_node_name": "opensearch-gaas-bootstrap-0",
+                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:243",
+                    "audit_transport_request_type": "GetIndexRequest",
+                    "audit_category": "INDEX_EVENT",
+                    "audit_request_origin": "REST",
+                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
+                    "audit_request_layer": "TRANSPORT",
+                    "@timestamp": "2025-09-10T12:10:51.883+00:00",
+                    "audit_format_version": 4,
+                    "audit_request_remote_address": "10.42.7.136",
+                    "audit_request_privilege": "indices:admin/get",
+                    "audit_node_host_address": "10.42.7.135",
+                    "audit_request_effective_user": "admin",
+                    "audit_trace_indices": [
+                        ".kibana"
+                    ],
+                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
+                }
+            },
+            {
+                "_index": "security-auditlog-2025.09.10",
+                "_id": "PwqJM5kBEy-iU1hoMidO",
+                "_score": 1,
+                "_source": {
+                    "audit_cluster_name": "opensearch-gaas",
+                    "audit_node_name": "opensearch-gaas-bootstrap-0",
+                    "audit_trace_task_id": "PwmtyV36QFWOFMKnVgmkhg:258",
+                    "audit_transport_request_type": "GetIndexRequest",
+                    "audit_category": "INDEX_EVENT",
+                    "audit_request_origin": "REST",
+                    "audit_node_id": "PwmtyV36QFWOFMKnVgmkhg",
+                    "audit_request_layer": "TRANSPORT",
+                    "@timestamp": "2025-09-10T12:10:53.389+00:00",
+                    "audit_format_version": 4,
+                    "audit_request_remote_address": "10.42.7.136",
+                    "audit_request_privilege": "indices:admin/get",
+                    "audit_node_host_address": "10.42.7.135",
+                    "audit_request_effective_user": "admin",
+                    "audit_trace_indices": [
+                        ".kibana"
+                    ],
+                    "audit_node_host_name": "opensearch-gaas-bootstrap-0"
+                }
+            }
+        ]
+    }
+}
          
