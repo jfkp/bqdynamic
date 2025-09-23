@@ -1,7 +1,7 @@
 from huggingface_hub import snapshot_download
 
 from opensearchpy import OpenSearch
-
+https://opensearch-gaas-dashboard.se-int-caas.ca.cib/api/console/proxy?path=_search&method=GET
 https://opensearch-gaas-dashboard.se-int-caas.ca.cib/app/home#/
 https://opensearch-gaas-dashboard.se-int-caas.ca.cib/
 # Connection config
