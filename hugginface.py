@@ -2,6 +2,8 @@ from huggingface_hub import snapshot_download
 
 from opensearchpy import OpenSearch
 
+https://opensearch-gaas-dashboard.se-int-caas.ca.cib/app/home#/
+https://opensearch-gaas-dashboard.se-int-caas.ca.cib/
 # Connection config
 host = "your-opensearch-host"
 port = 9200
