@@ -1,42 +1,76 @@
-import torch
-import base64
+import os
 import requests
+import zipfile
 import json
+import base64
+import torch
 from sentence_transformers import SentenceTransformer
 
 # -------------------------
 # CONFIG
 # -------------------------
-OPENSEARCH_URL = "http://localhost:9200"   # Change if needed
+OPENSEARCH_URL = "http://localhost:9200"   # adjust for your cluster
+JFROG_BASE_URL = "https://registry.saas.cagip.group.gca/artifactory"
+JFROG_REPO_KEY = "huggingfaceml-local"     # your repo key
+JFROG_ARTIFACT = "sentence-transformers_all-MiniLM-L6-v2.zip"
+JFROG_TOKEN = os.getenv("JFROG_TOKEN", "your-token-here")
+
+EXTRACT_DIR = "models"
 MODEL_NAME = "all-MiniLM-L6-v2"
-MODEL_PATH = f"{MODEL_NAME}.pt"  # TorchScript export path
+TORCHSCRIPT_MODEL = os.path.join(EXTRACT_DIR, f"{MODEL_NAME}.pt")
 
 # -------------------------
-# STEP 1: Convert HuggingFace model → TorchScript
+# STEP 1: Download + extract HF model from JFrog
 # -------------------------
-def convert_model_to_torchscript():
-    model = SentenceTransformer(MODEL_NAME)
+def load_model_from_jfrog(repo_key, artifact_name, token, extract_to="models"):
+    url = f"{JFROG_BASE_URL}/{repo_key}/{artifact_name}"
+    local_zip = os.path.join(extract_to, artifact_name)
+    local_dir = os.path.join(extract_to, artifact_name.replace(".zip", ""))
+
+    os.makedirs(extract_to, exist_ok=True)
+
+    print(f"⬇️ Downloading {artifact_name} from {url}...")
+    with requests.get(url, headers={"Authorization": f"Bearer {token}"}, stream=True, verify=False) as r:
+        r.raise_for_status()
+        with open(local_zip, "wb") as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                f.write(chunk)
+
+    print(f"📦 Extracting {artifact_name}...")
+    with zipfile.ZipFile(local_zip, "r") as zip_ref:
+        zip_ref.extractall(local_dir)
+
+    print(f"✅ Extracted to {local_dir}")
+    return local_dir
+
+# -------------------------
+# STEP 2: Convert HF model to TorchScript
+# -------------------------
+def convert_hf_to_torchscript(model_dir, output_path):
+    model = SentenceTransformer(model_dir)
 
     class EncoderWrapper(torch.nn.Module):
         def __init__(self, model):
             super().__init__()
             self.model = model
 
-        def forward(self, sentences):
+        def forward(self, sentences: list[str]):
             return self.model.encode(sentences, convert_to_tensor=True)
 
     wrapper = EncoderWrapper(model)
 
-    example = ["Hello OpenSearch!"]
-    traced = torch.jit.trace(wrapper, (example,))
-    torch.jit.save(traced, MODEL_PATH)
-    print(f"✅ Model converted and saved as {MODEL_PATH}")
+    example_input = ["Hello OpenSearch!"]
+    traced = torch.jit.trace(wrapper, (example_input,))
+    torch.jit.save(traced, output_path)
+
+    print(f"✅ TorchScript model saved to {output_path}")
+    return output_path
 
 # -------------------------
-# STEP 2: Register model in OpenSearch
+# STEP 3: Register model in OpenSearch
 # -------------------------
-def register_model():
-    with open(MODEL_PATH, "rb") as f:
+def register_model(torch_model_path):
+    with open(torch_model_path, "rb") as f:
         model_bytes = f.read()
     model_b64 = base64.b64encode(model_bytes).decode("utf-8")
 
@@ -57,7 +91,7 @@ def register_model():
     return model_id
 
 # -------------------------
-# STEP 3: Deploy model
+# STEP 4: Deploy model
 # -------------------------
 def deploy_model(model_id):
     resp = requests.post(f"{OPENSEARCH_URL}/_plugins/_ml/models/{model_id}/_deploy")
@@ -65,7 +99,7 @@ def deploy_model(model_id):
     print(f"✅ Model {model_id} deployed")
 
 # -------------------------
-# STEP 4: Predict embeddings
+# STEP 5: Get embedding
 # -------------------------
 def get_embedding(model_id, text):
     payload = {"parameters": {"inputs": text}}
@@ -74,11 +108,11 @@ def get_embedding(model_id, text):
                          data=json.dumps(payload))
     resp.raise_for_status()
     embedding = resp.json()["inference_results"][0]["output"]
-    print(f"✅ Got embedding of length {len(embedding)}")
+    print(f"✅ Got embedding for '{text}' (len={len(embedding)})")
     return embedding
 
 # -------------------------
-# STEP 5: Create index with vector field
+# STEP 6: Create index
 # -------------------------
 def create_index(index_name, dim=384):
     mapping = {
@@ -98,7 +132,7 @@ def create_index(index_name, dim=384):
         print(f"✅ Index {index_name} created")
 
 # -------------------------
-# STEP 6: Index doc with embedding
+# STEP 7: Index documents
 # -------------------------
 def index_doc(index_name, text, embedding):
     doc = {"text": text, "vector": embedding}
@@ -109,7 +143,7 @@ def index_doc(index_name, text, embedding):
     print(f"✅ Document indexed: {text}")
 
 # -------------------------
-# STEP 7: kNN search
+# STEP 8: Search
 # -------------------------
 def search(index_name, embedding, k=2):
     query = {
@@ -131,18 +165,29 @@ def search(index_name, embedding, k=2):
 # MAIN PIPELINE
 # -------------------------
 if __name__ == "__main__":
-    convert_model_to_torchscript()
-    model_id = register_model()
+    # 1. Download + extract HF model from JFrog
+    model_dir = load_model_from_jfrog(JFROG_REPO_KEY, JFROG_ARTIFACT, JFROG_TOKEN, extract_to=EXTRACT_DIR)
+
+    # 2. Convert to TorchScript
+    torch_model_path = convert_hf_to_torchscript(model_dir, TORCHSCRIPT_MODEL)
+
+    # 3. Register model in OpenSearch
+    model_id = register_model(torch_model_path)
+
+    # 4. Deploy model
     deploy_model(model_id)
 
-    # Test embedding
+    # 5. Get an embedding
     emb = get_embedding(model_id, "OpenSearch loves vectors")
 
-    # Create index + add docs
+    # 6. Create index
     create_index("my-embeddings", dim=len(emb))
-    index_doc("my-embeddings", "OpenSearch loves vectors", emb)
-    index_doc("my-embeddings", "Semantic search with MiniLM", get_embedding(model_id, "Semantic search with MiniLM"))
 
-    # Run query
+    # 7. Index some docs
+    index_doc("my-embeddings", "OpenSearch loves vectors", emb)
+    index_doc("my-embeddings", "Semantic search with MiniLM",
+              get_embedding(model_id, "Semantic search with MiniLM"))
+
+    # 8. Run a query
     query_emb = get_embedding(model_id, "vector search")
     search("my-embeddings", query_emb, k=2)
