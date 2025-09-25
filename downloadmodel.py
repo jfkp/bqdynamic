@@ -1,3 +1,6 @@
+Uploading model from models\models--sentence-transformers--all-MiniLM-L6-v2\snapshots\c9745ed1d9f207416be6d2e6f8de32d1f16199bf to private JFrog repository...
+An error occurred during the upload: [Errno 2] No such file or directory: 'sentence-transformers_all-MiniLM-L6-v2.zip'
+
 
 import os
 from huggingface_hub.utils import RepositoryNotFoundError, RevisionNotFoundError, HfHubHTTPError
