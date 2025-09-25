@@ -1,5 +1,5 @@
 
-
+Uploading sentence-transformers/all-MiniLM-L6-v2 to https://registry.saas.cagip.group.gca/artifactory/huggingfaceml/sentence-transformers_all-MiniLM-L6-v2.zip
 
 import os
 from huggingface_hub.utils import RepositoryNotFoundError, RevisionNotFoundError, HfHubHTTPError
