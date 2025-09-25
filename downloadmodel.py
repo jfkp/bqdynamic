@@ -1,5 +1,6 @@
 
-Uploading sentence-transformers/all-MiniLM-L6-v2 to https://registry.saas.cagip.group.gca/artifactory/huggingfaceml/sentence-transformers_all-MiniLM-L6-v2.zip
+
+
 
 import os
 from huggingface_hub.utils import RepositoryNotFoundError, RevisionNotFoundError, HfHubHTTPError
@@ -126,6 +127,31 @@ def upload_to_jfrog(model_id, model_path):
     except Exception as e:
         print(f"❌ Upload error: {e}")
 
+
+def load_model_from_jfrog(repo_key, artifact_name, token, extract_to="models"):
+
+    base_url = "https://registry.saas.cagip.group.gca/artifactory"
+    url = f"{base_url}/{repo_key}/{artifact_name}"
+
+    local_zip = os.path.join(extract_to, artifact_name)
+    local_dir = os.path.join(extract_to, artifact_name.replace(".zip", ""))
+
+    os.makedirs(extract_to, exist_ok=True)
+
+    # Download
+    with requests.get(url, headers={"Authorization": f"Bearer {token}"}, stream=True, verify=False) as r:
+        r.raise_for_status()
+        with open(local_zip, "wb") as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                f.write(chunk)
+
+    # Extract
+    with zipfile.ZipFile(local_zip, "r") as zip_ref:
+        zip_ref.extractall(local_dir)
+
+    return local_dir
+
+
 if __name__ == "__main__":
 
   
@@ -135,3 +161,12 @@ if __name__ == "__main__":
     print(model.encode("Hello world"))
     
     upload_to_jfrog(model_id,model_path)
+
+    local_model_path = load_model_from_jfrog(
+    repo_key="huggingfaceml-local",
+    artifact_name="sentence-transformers_all-MiniLM-L6-v2.zip",
+    token=os.environ["JF_TOKEN"]
+    )
+
+    model = SentenceTransformer(local_model_path)
+
