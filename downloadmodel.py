@@ -1,5 +1,4 @@
-Uploading model from models\models--sentence-transformers--all-MiniLM-L6-v2\snapshots\c9745ed1d9f207416be6d2e6f8de32d1f16199bf to private JFrog repository...
-An error occurred during the upload: [Errno 2] No such file or directory: 'sentence-transformers_all-MiniLM-L6-v2.zip'
+
 
 
 import os
@@ -64,23 +63,68 @@ def download_model():
     return model_id,model_path
   
 
-def upload_to_jfrog(model_id,model_path):
-   # Initialize HfApi instance with the private endpoint and token
-    api = HfApi(endpoint=os.environ["HF_ENDPOINT"], token='JF_TOKEN')
+import shutil
+import os
+import requests
+
+def upload_to_jfrog(model_id, model_path):
+    if not model_path:
+        print("⚠️ No model to upload.")
+        return
+
+    jfrog_token = os.environ["JF_TOKEN"]
+    jfrog_base = os.environ["HF_ENDPOINT"]  # careful: this should point to your Artifactory REST API
+    repo = "huggingfaceml"                  # adjust to your repo name
+    artifact_name = f"{model_id.replace('/', '_')}.zip"
+
+    # Full upload path (artifact storage URL, not API)
+    upload_url = f"{jfrog_base}/{artifact_name}"
+
+    print(f"📤 Uploading {model_id} to {upload_url} ...")
 
     try:
-        # Upload the model to the private JFrog repository
-        print(f"Uploading model from {model_path} to private JFrog repository...")
-        api.upload_folder(
-            folder_path="huggingface_mirror/models/sentence-transformers/all-MiniLM-L6-v2", 
-            repo_id=model_id,
-            repo_type="model",
-            revision="5617a9f61b028005a4858fdac845db406aefb181"
+        # Create zip in current working directory
+        zip_base = model_id.replace("/", "_")   
+        zip_path = f"{zip_base}.zip"
+        shutil.make_archive(zip_base, "zip", model_path)
 
-        )
-        print(f"Model {model_id} successfully uploaded to the private JFrog repository.")
+        # Upload to JFrog
+        with open(zip_path, "rb") as f:
+            resp = requests.put(
+                upload_url,
+                headers={"Authorization": f"Bearer {jfrog_token}"},
+                data=f,
+                verify=False,
+            )
+
+        if resp.status_code in (200, 201):
+            print("✅ Upload successful")
+
+            # --- Verify using JFrog Storage API ---
+            verify_url = f"{jfrog_base}/api/storage/{repo}/{artifact_name}"
+            resp2 = requests.get(
+                verify_url,
+                headers={"Authorization": f"Bearer {jfrog_token}"},
+                verify=False,
+            )
+
+            if resp2.status_code == 200:
+                meta = resp2.json()
+                print("🔎 Verification result:")
+                print(f"  Repo: {meta.get('repo')}")
+                print(f"  Path: {meta.get('path')}")
+                print(f"  Size: {meta.get('size')} bytes")
+                print(f"  Created: {meta.get('created')}")
+                print(f"  SHA1: {meta['checksums'].get('sha1')}")
+                print(f"  MD5: {meta['checksums'].get('md5')}")
+            else:
+                print(f"⚠️ Could not verify upload. Status: {resp2.status_code} {resp2.text}")
+
+        else:
+            print(f"❌ Upload failed: {resp.status_code}, {resp.text}")
+
     except Exception as e:
-        print(f"An error occurred during the upload: {e}")
+        print(f"❌ Upload error: {e}")
 
 if __name__ == "__main__":
 
