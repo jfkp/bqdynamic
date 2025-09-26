@@ -1,3 +1,7 @@
+
+requests.exceptions.SSLError: HTTPSConnectionPool(host='opensearch-atlasrag.se-int-caas.ca.cib', port=443):
+Max retries exceeded with url: /_plugins/_ml/models/_register (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:2406)')))
+
 from transformers import AutoTokenizer, AutoModel
 import torch
 
