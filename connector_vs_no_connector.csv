@@ -1,0 +1,4 @@
+Strategy,Needs opensearch-ml plugin?,Who calls the model?,Where embeddings are generated?
+Connector,✅ Yes,OpenSearch,External service (e.g. NVIDIA Triton)
+Local model in Python,❌ No,Your Python app,Local machine
+Direct API call from Python,❌ No,Your Python app,"External service (e.g. Triton, OpenAI, Hugging Face)"
